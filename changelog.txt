@@ -1,3 +1,8 @@
+Version 1.0.3
+    - Memory leak from cl_mem stack object cleared
+    - Scene cleared on each draw to prevent acumulation of image objects building up
+    - Algorithm to select best device based on device score and fp64 compatability implemented
+
 Version 1.0.2
     - Clean up complexcanvas member variables
     - Unions now implemented in Token class

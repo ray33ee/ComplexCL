@@ -4,7 +4,8 @@ Evaluator::Evaluator()
 {
     _formula = "z";
     _tokens.append(Token(Token::VARIABLE));
-    _tokens.append(Token(Token::LN));
+    _tokens.append(Token(Token::CONSTANT, 2.0));
+    _tokens.append(Token(Token::POWER));
 }
 
 Evaluator::Evaluator(QString formula)
@@ -29,7 +30,18 @@ QString Evaluator::getFormula() const
 
 int Evaluator::getStackMax() const
 {
-    return 1;
+    int maxStack = 1;
+    int size = 0;
+
+    for (const Token& token : _tokens)
+    {
+        if (token._type == Token::OPERATOR && token._data._operator < 6) //If its a unary operator, decrement
+            size--;
+        else if (token._type == Token::VARIABLE || token._type == Token::CONSTANT)
+            size++;
+        maxStack = size > maxStack ? size : maxStack;
+    }
+    return maxStack;
 }
 
 std::complex<double> Evaluator::operator()(const std::complex<double> &z)

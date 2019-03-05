@@ -34,14 +34,12 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     evaluator.cpp \
-    token.cpp \
     complexcanvas.cpp \
 
 HEADERS += \
         mainwindow.h \
     complexcanvas.h \
     evaluator.h \
-    token.h \
 
 FORMS += \
         mainwindow.ui

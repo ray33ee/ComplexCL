@@ -29,7 +29,7 @@ public:
 
     virtual void resizeEvent(QResizeEvent *ev);
 
-    ~ComplexCanvas() {}
+    ~ComplexCanvas();
 
 private:
 
@@ -60,6 +60,8 @@ private:
     std::complex<double> _diff;
 
     int                 _maxArea;
+
+    static void getBestDevice(int platCount, cl_device_id *device, cl_platform_id *platform, bool fp64);
 
 
 signals:
