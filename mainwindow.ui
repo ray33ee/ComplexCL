@@ -17,10 +17,10 @@
    <widget class="ComplexCanvas" name="graphicsView">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>20</y>
-      <width>256</width>
-      <height>192</height>
+      <x>10</x>
+      <y>10</y>
+      <width>381</width>
+      <height>221</height>
      </rect>
     </property>
    </widget>

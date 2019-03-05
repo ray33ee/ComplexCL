@@ -1,18 +1,28 @@
 #include "complexcanvas.h"
 
-ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent)
+ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _function()
 {
     using namespace std;
 
+    QFile kernelCode("E:\\Software Projects\\Qt\\ComplexCL\\kernel\\kernel.cl");
+
+    kernelCode.open(QIODevice::ReadOnly);
+
+    QString kernelsource(kernelCode.readAll().data());
+
+    kernelCode.close();
+
+    _image = new QImage(width() - 2, height() - 2, QImage::Format_RGB32);
+
     cl_uint platCount;
-    cl_int res = clGetPlatformIDs(0, nullptr, &platCount);
+    cl_int err = clGetPlatformIDs(0, nullptr, &platCount);
 
-    cout << "Get platform count. Code " << res << "." << endl;
+    cout << "Get platform count. Code " << _error << "." << endl;
 
 
-    if (res == CL_OUT_OF_HOST_MEMORY)
+    if (_error == CL_INVALID_VALUE )
     {
-
+        cout << "pokpokpo";
     }
 
     if (platCount == 0)
@@ -20,104 +30,124 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent)
 
     }
 
-    size_t totalCount = 100;
-
     cl_platform_id platform;
-    res = clGetPlatformIDs(1, &platform, nullptr);
-    cout << "Get platform. Code " << res << "." << endl;
+    _error = clGetPlatformIDs(1, &platform, nullptr);
+    cout << "Get platform. Code " << _error << "." << endl;
 
-    cl_device_id device;
     cl_uint devCount;
 
-    res = clGetDeviceIDs(platform, CL_DEVICE_TYPE_DEFAULT, 0, nullptr, &devCount);
-    cout << "Get device count. Code " << res << "." << endl;
+    _error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_DEFAULT, 0, nullptr, &devCount);
+    cout << "Get device count. Code " << _error << "." << endl;
 
-    res = clGetDeviceIDs(platform, CL_DEVICE_TYPE_DEFAULT, 1, &device, nullptr);
-    cout << "Get device. Code " << res << "." << endl;
+    _error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_DEFAULT, 1, &_device, nullptr);
+    cout << "Get device. Code " << _error << "." << endl;
 
-    cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &res);
-    cout << "Get context. Code " << res << "." << endl;
+    _context = clCreateContext(nullptr, 1, &_device, nullptr, nullptr, &_error);
+    cout << "Get context. Code " << _error << "." << endl;
 
-    cl_command_queue queue = clCreateCommandQueue(context, device, 0, &res);
-    cout << "Get command queue. Code " << res << "." << endl;
+    _queue = clCreateCommandQueue(_context, _device, 0, &_error);
+    cout << "Get command queue. Code " << _error << "." << endl;
 
-    cl_mem buffA = clCreateBuffer(context, 0, totalCount * sizeof(uint32_t), nullptr, &res);
-    cout << "Get buffer for A. Code " << res << "." << endl;
+    const char* kernelS = kernelsource.toStdString().data();
+    _program = clCreateProgramWithSource(_context, 1, &kernelS, nullptr, &_error);
+    cout << "Get program object. Code " << _error << "." << endl;
 
-    cl_mem buffB = clCreateBuffer(context, 0, totalCount * sizeof(uint32_t), nullptr, &res);
-    cout << "Get buffer for B. Code " << res << "." << endl;
+    _error = clBuildProgram(_program, 1, &_device, "-I\"E:\\Software Projects\\Qt\\ComplexCL\\inc\"", nullptr, nullptr);
+    cout << "Build program. Code " << _error << "." << endl;
 
-    cl_mem resultBuff = clCreateBuffer(context, 0, totalCount * sizeof(uint32_t), nullptr, &res);
-    cout << "Get buffer for result. Code " << res << "." << endl;
+    _kernel = clCreateKernel(_program, "get_landscape", &_error);
+    cout << "Create kernel object. Code " << _error << "." << endl;
 
-    uint32_t hostBuffA[totalCount];
-    uint32_t hostBuffB[totalCount];
-
-    uint32_t result[totalCount];
-
-    for (uint32_t i = 0; i < totalCount; ++i)
-    {
-        hostBuffA[i] = i;
-        hostBuffB[i] = i * 6;
-    }
-
-    res = clEnqueueWriteBuffer(queue, buffA, CL_TRUE, 0, totalCount * sizeof(uint32_t), hostBuffA, 0, nullptr, nullptr);
-    cout << "Get copy A data to device. Code " << res << "." << endl;
-
-    res = clEnqueueWriteBuffer(queue, buffB, CL_TRUE, 0, totalCount * sizeof(uint32_t), hostBuffB, 0, nullptr, nullptr);
-    cout << "Get copy B data to device. Code " << res << "." << endl;
-
-    const char* kernel = "__kernel void hello_kernel(__global const int *a, __global const int *b, __global int *res)\n"
-                        "{ "
-                            "int id = get_global_id(0);"
-                            "res[id] = a[id] + b[id]; "
-                        "}";
-
-    cl_program program = clCreateProgramWithSource(context, 1, &kernel, nullptr, &res);
-    cout << "Get program object. Code " << res << "." << endl;
-
-    res = clBuildProgram(program, 1, &device, "", nullptr, nullptr);
-    cout << "Build program. Code " << res << "." << endl;
-
-    cl_kernel kern = clCreateKernel(program, "hello_kernel", &res);
-    cout << "Create kernel object. Code " << res << "." << endl;
-
-    res = clSetKernelArg(kern, 0, sizeof(uint32_t), &buffA);
-    cout << "Add first argument. Code " << res << "." << endl;
-
-    res = clSetKernelArg(kern, 1, sizeof(uint32_t), &buffB);
-    cout << "Add first argument. Code " << res << "." << endl;
-
-    res = clSetKernelArg(kern, 2, sizeof(uint32_t), &resultBuff);
-    cout << "Add first argument. Code " << res << "." << endl;
-
-    size_t localSize = 1;
-
-    cl_event kernelEvent;
-
-    res = clEnqueueNDRangeKernel(queue, kern, 1, nullptr, &totalCount, &localSize, 0, nullptr, &kernelEvent);
-    cout << "Queue kernel. Code " << res << "." << endl;
-
-    res = clWaitForEvents(1, &kernelEvent); //Wait for the kernel to finish
-    cout << "Wait... Code " << res << "." << endl;
+    if (_error == CL_INVALID_KERNEL_NAME  )
+        cout << "Got ya!" << endl;
 
 
 
-    res = clEnqueueReadBuffer(queue, resultBuff, CL_TRUE, 0, totalCount * sizeof(uint32_t), result, 0, nullptr, nullptr);
-    cout << "Read result. Code " << res << "." << endl;
 
-
-
-    for (int i = 0; i < 100; ++i)
-    {
-        cout << result[i] << endl;
-    }
-
-
-
+    drawCanvas();
 }
 
+int ComplexCanvas::getArea() const
+{
+    return width() * height();
+}
 
+void ComplexCanvas::drawCanvas()
+{
+    using namespace std;
+
+    int tokenCount = _function.getCount();
+
+    int w = 381 - 5;
+    int h = 221 - 5;
+    int area = w*h;
+
+    cl_event writeEvent, kernelEvent;
+
+    cl_mem tokens = clCreateBuffer(_context, CL_MEM_READ_WRITE, tokenCount * sizeof(Token), nullptr, &_error);
+    cout << "Create tokens buffer. Code " << _error << "." << endl;
+
+    cl_mem stack = clCreateBuffer(_context, CL_MEM_READ_WRITE, area * _function.getStackMax() * sizeof(std::complex<double>), nullptr, &_error);
+    cout << "Create stack buffer. Code " << _error << "." << endl;
+
+    cl_mem colours = clCreateBuffer(_context, CL_MEM_READ_WRITE, area * sizeof(int), nullptr, &_error);
+    cout << "Create colour image buffer. Code " << _error << "." << endl;
+
+    _error = clEnqueueWriteBuffer(_queue, tokens, CL_TRUE, 0, tokenCount * sizeof(Token), _function.getTokens(), 0, nullptr, &writeEvent);
+    cout << "Create populate tokens buffer. Code " << _error << "." << endl;
+
+
+    double minRe = -100.0;
+    double minIm = -100.0;
+    double diffRe = 200.0;
+    double diffIm = 200.0;
+
+    int stackMax = _function.getStackMax();
+
+    size_t localSize = 1;
+    size_t totalSize = area;
+
+    size_t workSize[] = { (size_t)w, (size_t)h };
+
+    _error = 0;
+
+    _error |= clSetKernelArg(_kernel, 0, sizeof(cl_mem), &tokens);
+    _error |= clSetKernelArg(_kernel, 1, sizeof(cl_mem), &stack);
+    _error |= clSetKernelArg(_kernel, 2, sizeof(int), &tokenCount);
+    _error |= clSetKernelArg(_kernel, 3, sizeof(double), &minRe);
+    _error |= clSetKernelArg(_kernel, 4, sizeof(double), &minIm);
+    _error |= clSetKernelArg(_kernel, 5, sizeof(double), &diffRe);
+    _error |= clSetKernelArg(_kernel, 6, sizeof(double), &diffIm);
+    _error |= clSetKernelArg(_kernel, 7, sizeof(int), &w);
+    _error |= clSetKernelArg(_kernel, 8, sizeof(int), &h);
+    _error |= clSetKernelArg(_kernel, 9, sizeof(cl_mem), &colours);
+    _error |= clSetKernelArg(_kernel, 10, sizeof(int), &area);
+    _error |= clSetKernelArg(_kernel, 11, sizeof(int), &stackMax);
+
+    cout << "Arguments set. Code " << _error << "." << endl;
+
+    int* cols = new int[area];
+
+    cout << "Area: " << width() << " " << height() << endl;
+
+    _error = clEnqueueNDRangeKernel(_queue, _kernel, 2, nullptr, workSize, &localSize, 1, &writeEvent, &kernelEvent);
+    cout << "Queue kernel. Code " << _error << "." << endl;
+
+    _error = clEnqueueReadBuffer(_queue, colours, CL_TRUE, 0, area * sizeof(int), cols, 0, nullptr, nullptr);
+    cout << "Read result. Code " << _error << "." << endl;
+
+
+
+    _image = new QImage((uchar*)cols, w, h, QImage::Format_RGB32);
+
+    cout << cols[325] << endl;
+    cout << _function.getTokens()[0]._type << endl;
+
+    _scene.addPixmap(QPixmap::fromImage(*_image));
+
+    setScene(&_scene);
+
+}
 
 
 

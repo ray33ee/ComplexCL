@@ -36,10 +36,16 @@ public:
     Evaluator(QString formula);
 
     /**
-     * @brief getTokens gets the list of tokens produced
+     * @brief getTokens gets the pointer to the array of tokens
      * @return the list of tokens
      */
-    QVector<Token> getTokens() const;
+    Token* getTokens();
+
+    /**
+     * @brief getCount get the number of tokens used
+     * @return number of tokens
+     */
+    int getCount();
 
     /**
      * @brief getFormula gets the original string formula

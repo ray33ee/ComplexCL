@@ -33,15 +33,15 @@ LIBS += -L"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32"
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    complexcanvas.cpp \
     evaluator.cpp \
-    token.cpp
+    token.cpp \
+    complexcanvas.cpp \
 
 HEADERS += \
         mainwindow.h \
     complexcanvas.h \
     evaluator.h \
-    token.h
+    token.h \
 
 FORMS += \
         mainwindow.ui
