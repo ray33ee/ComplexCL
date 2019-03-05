@@ -3,9 +3,9 @@
 Evaluator::Evaluator()
 {
     _formula = "z";
-    _tokens.append(Token(Token::VARIABLE));
-    _tokens.append(Token(Token::CONSTANT, 2.0));
-    _tokens.append(Token(Token::POWER));
+    _tokens.append(Token<double>(VARIABLE));
+    _tokens.append(Token<double>(CONSTANT, 2.0));
+    _tokens.append(Token<double>(POWER));
 }
 
 Evaluator::Evaluator(QString formula)
@@ -13,9 +13,31 @@ Evaluator::Evaluator(QString formula)
 
 }
 
-Token* Evaluator::getTokens()
+Token<double>* Evaluator::getTokens()
 {
     return _tokens.data();
+}
+
+Token<float>* Evaluator::getFloatTokens()
+{
+    _floatTokens.clear();
+
+    for (Token<double> &token : _tokens)
+    {
+        Token<float> item;
+
+        item._type = token._type;
+
+        if (item._type == CONSTANT)
+            item._data._value = std::complex<float>(token._data._value.real(), token._data._value.imag());
+        else
+            item._data._operator = token._data._operator;
+
+        _floatTokens.append(item);
+    }
+
+
+    return _floatTokens.data();
 }
 
 int Evaluator::getCount()
@@ -33,11 +55,11 @@ int Evaluator::getStackMax() const
     int maxStack = 1;
     int size = 0;
 
-    for (const Token& token : _tokens)
+    for (const Token<double>& token : _tokens)
     {
-        if (token._type == Token::OPERATOR && token._data._operator < 6) //If its a unary operator, decrement
+        if (token._type == OPERATOR && token._data._operator < 6) //If its a unary operator, decrement
             size--;
-        else if (token._type == Token::VARIABLE || token._type == Token::CONSTANT)
+        else if (token._type == VARIABLE || token._type == CONSTANT)
             size++;
         maxStack = size > maxStack ? size : maxStack;
     }

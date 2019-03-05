@@ -9,6 +9,8 @@
 #include <complex>
 #include <QDebug>
 #include <QResizeEvent>
+#include <QMessageBox>
+#include <QCoreApplication>
 
 /**
  * @brief The ComplexCanvas class is responsible for drawing the complex landscape.
@@ -61,7 +63,13 @@ private:
 
     int                 _maxArea;
 
-    static void getBestDevice(int platCount, cl_device_id *device, cl_platform_id *platform, bool fp64);
+    bool                _doublePrecision;
+
+    static bool getBestDevice(int platCount, cl_device_id *device, cl_platform_id *platform, bool fp64);
+
+    static void clErrFunction(cl_program, void* data);
+
+    void errHandler(cl_int err, const char* string);
 
 
 signals:

@@ -1,3 +1,8 @@
+Version 1.0.4
+    - OpenCL header files now incorporated in kernel.cl file
+    - Host now sends float/double based on device support
+    - Error codes handled by message to the user and exit
+
 Version 1.0.3
     - Memory leak from cl_mem stack object cleared
     - Scene cleared on each draw to prevent acumulation of image objects building up
