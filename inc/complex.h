@@ -28,8 +28,12 @@ struct Complex
 /** Token - see Token.java*/
 struct Token
 {
-    real re;
-    real im;
+    union
+    {
+    	struct Complex value;
+    	int op;
+    };
+
     int type;
 };
 
@@ -258,7 +262,7 @@ struct Complex c_sqrt(struct Complex z)
     if (isZero(z))
         return C_ZERO;
 
-    double t = sqrt((fabs((real)z.re) + c_abs(z)) / 2.0);
+    double t = sqrt((fabs(z.re) + c_abs(z)) / 2.0);
     if (z.re >= 0.0)
         return c_complex(t, z.im / (2.0 * t));
     else 
@@ -396,15 +400,21 @@ real c_abs(struct Complex z)
  */
 real c_arg(struct Complex z) { return atan2(z.im, z.re); }
 
+/**
+ * HLtoRGB converts a hue and lightness value to an ARGB object
+ * @param h hue number from 0 to 1
+ * @param l lightness value from 0 to 1
+ * @return a converted ARGB object
+ */
 struct ARGB HLtoRGB(float h, float l)
 {
     float q = l < 0.5 ? l*2 : 1;
 
     float p = 2 * l - q;
 
-    float r = max(0.0f, (float)HueToRGB(p, q, h + (1.0f / 3.0f)));
-    float g = max(0.0f, (float)HueToRGB(p, q, h));
-    float b = max(0.0f, (float)HueToRGB(p, q, h - (1.0f / 3.0f)));
+    float r = max(0.0f, HueToRGB(p, q, h + (1.0f / 3.0f)));
+    float g = max(0.0f, HueToRGB(p, q, h));
+    float b = max(0.0f, HueToRGB(p, q, h - (1.0f / 3.0f)));
 
     r = min(r, 1.0f);
     g = min(g, 1.0f);
@@ -413,7 +423,10 @@ struct ARGB HLtoRGB(float h, float l)
     return ARGB_constructor( r*255, g*255, b*255);
 }
 
-float  HueToRGB(float  p, float  q, float  h)
+/**
+ * HueToRGB is called by HLtoRGB to facilitate conversion
+ */
+float  HueToRGB(float p, float q, float h)
 {
     if (h < 0) h += 1;
 
@@ -507,7 +520,7 @@ struct Complex evaluate(__global struct Token* tokens, __global struct Complex* 
                 pointer += area;
                 break;
             case 2:
-                switch ((int)tokens[cnt].re)
+                switch (tokens[cnt].op)
                 {
                     case 0:
                         pointer -= area;
@@ -593,8 +606,7 @@ struct Complex evaluate(__global struct Token* tokens, __global struct Complex* 
                 }
                 break;
             case 3:
-                stack[pointer].re = tokens[cnt].re;
-                stack[pointer].im = tokens[cnt].im;
+                stack[pointer] = tokens[cnt].value;
                 pointer += area;
                 break;
         }

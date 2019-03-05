@@ -6,8 +6,9 @@
 #include <iostream>
 #include <QFile>
 #include "evaluator.h"
-
+#include <complex>
 #include <QDebug>
+#include <QResizeEvent>
 
 /**
  * @brief The ComplexCanvas class is responsible for drawing the complex landscape.
@@ -24,19 +25,42 @@ public:
 
     void drawCanvas();
 
+    void updateFunction(Evaluator function, std::complex<double> min, std::complex<double> diff);
+
+    virtual void resizeEvent(QResizeEvent *ev);
+
     ~ComplexCanvas() {}
 
 private:
-    cl_device_id        _device;
+
+    //OpenCL context, command queue and kernel
     cl_context          _context;
     cl_command_queue    _queue;
-    cl_program          _program;
-    cl_int              _error;
     cl_kernel           _kernel;
-    QImage*              _image;
-    QGraphicsScene      _scene;
 
+    //OpenCL Buffers
+    cl_mem              _colourBuff;
+    cl_mem              _tokensBuff;
+
+    //OpenCL events
+    cl_event            _writeEvent;
+
+    //OpenCL error code
+    cl_int              _error;
+
+    //Graphics
+    QGraphicsScene      _scene;
+    QImage              _image;
+
+    //Function to graph
     Evaluator           _function;
+
+    //Bounding rectangle
+    std::complex<double> _min;
+    std::complex<double> _diff;
+
+    int                 _maxArea;
+
 
 signals:
 

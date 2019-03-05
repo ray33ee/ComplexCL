@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="ComplexCanvas" name="graphicsView">
+   <widget class="ComplexCanvas" name="complexcanvas">
     <property name="geometry">
      <rect>
       <x>10</x>

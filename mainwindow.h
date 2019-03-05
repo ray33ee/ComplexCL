@@ -16,6 +16,8 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    virtual void resizeEvent(QResizeEvent *e);
+
 private:
     Ui::MainWindow *ui;
 };

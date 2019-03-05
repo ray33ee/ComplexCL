@@ -1,0 +1,14 @@
+Version 1.0.2
+    - Clean up complexcanvas member variables
+    - Unions now implemented in Token class
+    - (float) removed from HLtoRGB function in OpenCL C code
+    - Redundant (real) cast removed from c_sqrt function
+    - min and diff values are sent as two complex values, not 4 real values
+    - Separate functions for resizing, updating and executing of kernel
+
+Version 1.0.1
+    - Modified certain aspects that were used due to Java limitations (such as using real for the type part in token struct)
+    - Basic colour wheel implemented
+
+Version 1.0.0
+    - Basic 'hello kernel' implemented

@@ -10,32 +10,56 @@ class Token
 {
 public:
 
-    std::complex<double> _data;
+    enum OperatorType
+    {
+        ADD = 0,
+        SUBTRACT = 1,
+        MULTIPLY = 2,
+        DIVIDE = 3,
+        POWER = 4,
+        LOG = 5,
+        NEGATE = 6,
+        CONJUGATE = 7,
+        SQRT = 8,
+        LN = 9,
+        EXP = 10,
+        SINH = 11,
+        COSH = 12,
+        TANH = 13,
+        SIN = 14,
+        COS = 15,
+        TAN = 16,
+        ASINH = 17,
+        ACOSH = 18,
+        ATANH = 19,
+        ASIN = 20,
+        ACOS = 21,
+        ATAN = 22,
+        ABS = 23,
+        ARG = 24
+    };
 
-    /*enum TokenType
+    union TokenData
+    {
+        std::complex<double>    _value;
+        OperatorType            _operator;
+
+        TokenData(std::complex<double> val): _value(val) { }
+        TokenData(OperatorType val): _operator(val) { }
+    } _data;
+
+    enum TokenType
     {
         INVALID = 0,
         VARIABLE = 1,
         OPERATOR = 2,
         CONSTANT = 3
-    }*/ int  _type;
+    }  _type;
 
-    /*union TokenData
-    {
-        std::complex<double>    _value;
-        int                     _operator;
+    Token() :  _data(0), _type(INVALID) {}
 
-        TokenData(std::complex<double> val): _value(val) { }
-        TokenData(int val): _operator(val) { }
-    } _data;
-*/
-
-
-    Token() : _type(1), _data(0) {}
-
-    Token(int type, std::complex<double> data) : _type(type), _data(data) {  }
-
-    //Token(TokenType type, int op) : _type(type), _data(op) {}
+    Token(TokenType type, std::complex<double> data = 0.0) : _data(data), _type(type) {  }
+    Token(OperatorType op) : _data(op), _type(OPERATOR) {  }
 };
 
 #endif // TOKEN_H

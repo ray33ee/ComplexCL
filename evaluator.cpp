@@ -3,7 +3,8 @@
 Evaluator::Evaluator()
 {
     _formula = "z";
-    _tokens.append(Token(1, std::complex<double>(2.23, 3.73)));
+    _tokens.append(Token(Token::VARIABLE));
+    _tokens.append(Token(Token::LN));
 }
 
 Evaluator::Evaluator(QString formula)

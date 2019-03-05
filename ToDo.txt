@@ -1,0 +1,5 @@
+To Do list:
+
+ - Allow the host to select between single and double precision, depending on the device
+ - Automatically select best device
+ -
