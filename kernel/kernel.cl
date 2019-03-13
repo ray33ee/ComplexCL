@@ -27,8 +27,6 @@ typedef float real;
 
 #endif
 
-
-/* Yes I know I'm going to hell for using #defines...*/
 #define C_ZERO (c_complex(0,0))
 #define C_ONE (c_complex(1, 0))
 #define C_MINUS_ONE (c_complex(-1, 0))
@@ -53,7 +51,7 @@ struct Complex
     real im;
 };
 
-/** Token - see Token.java*/
+/** Token */
 struct Token
 {
     union

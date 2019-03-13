@@ -1,3 +1,5 @@
 To Do list:
 
  - Get error codes from OpenCL api calls and act accordingly
+ - Create readme.md with build instructions
+ -

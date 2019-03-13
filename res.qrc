@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/OpenCL">
+        <file>kernel/kernel.cl</file>
+    </qresource>
+</RCC>

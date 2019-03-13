@@ -1,3 +1,9 @@
+Version 1.0.5
+    - Absolute paths converted to relative paths
+    - Warnings cleared
+    - Kernel.cl is now a compiled-in resource
+    - Generic error message box now has an equally generic title
+
 Version 1.0.4
     - OpenCL header files now incorporated in kernel.cl file
     - Host now sends float/double based on device support

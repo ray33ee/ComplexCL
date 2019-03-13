@@ -9,7 +9,7 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _function
     cl_device_id device;
 
     //Put kernel code into const char* pointer
-    QFile kernelCode("E:\\Software Projects\\Qt\\ComplexCL\\kernel\\kernel.cl");
+    QFile kernelCode(":/OpenCL/kernel/kernel.cl");
 
     kernelCode.open(QIODevice::ReadOnly);
 
@@ -44,6 +44,8 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _function
     //Then it breaks. Don't be smart. Don't do it.
     std::string ks = kernelsource.toStdString();
     const char* kernelS = ks.data();
+
+    cout << kernelS << endl;
 
     cl_program program = clCreateProgramWithSource(_context, 1, &kernelS, nullptr, &_error);
     errHandler(_error, "clCreateProgramWithSource");
@@ -80,7 +82,7 @@ void ComplexCanvas::errHandler(cl_int err, const char* string)
     else
     {
         std::cout << "Error after api call to " << string << ". Error code " << err << "." << std::endl;
-        QMessageBox::critical(this, "Out of host memory", QString() + "Error after api call to " + string + ". Error code " + QString::number(err) + ".");
+        QMessageBox::critical(this, "Critical Error", QString() + "Error after api call to " + string + ". Error code " + QString::number(err) + ".");
     }
 
 
@@ -123,11 +125,11 @@ bool ComplexCanvas::getBestDevice(int platCount, cl_device_id *device, cl_platfo
             err = 0;
 
             err |= clGetDeviceInfo(devices[dev], CL_DEVICE_MAX_CLOCK_FREQUENCY, 1024, str, nullptr);
-            score *= *(cl_uint*)str;
+            score *= *reinterpret_cast<cl_uint*>(str);
             err |= clGetDeviceInfo(devices[dev], CL_DEVICE_MAX_WORK_GROUP_SIZE, 1024, str, nullptr);
-            score *= *(size_t*)str;
+            score *= *reinterpret_cast<size_t*>(str);
             err |= clGetDeviceInfo(devices[dev], CL_DEVICE_MAX_COMPUTE_UNITS, 1024, str, nullptr);
-            score *= *(cl_uint*)str;
+            score *= *reinterpret_cast<cl_uint*>(str);
 
             cout << "    Get device " << dev << " score (" << score << "). Code " << err << endl;
 
@@ -251,8 +253,8 @@ void ComplexCanvas::updateFunction(Evaluator function, std::complex<double> min,
     }
     else
     {
-        complex<float> minf(_min.real(), _min.imag());
-        complex<float> difff(_diff.real(), _diff.imag());
+        complex<float> minf(static_cast<float>(_min.real()), static_cast<float>(_min.imag()));
+        complex<float> difff(static_cast<float>(_diff.real()), static_cast<float>(_diff.imag()));
 
         _error |= clSetKernelArg(_kernel, 3, sizeof(complex<float>), &minf);
         _error |= clSetKernelArg(_kernel, 4, sizeof(complex<float>), &difff);
@@ -264,7 +266,7 @@ void ComplexCanvas::updateFunction(Evaluator function, std::complex<double> min,
 
 }
 
-void ComplexCanvas::resizeEvent(QResizeEvent *ev)
+void ComplexCanvas::resizeEvent(QResizeEvent *)
 {
     using namespace std;
 
@@ -295,11 +297,6 @@ void ComplexCanvas::resizeEvent(QResizeEvent *ev)
     errHandler(_error, "clSetKernelArg");
 
     drawCanvas();
-}
-
-void ComplexCanvas::clErrFunction(cl_program prog, void* data)
-{
-    qDebug() << (char*)data;
 }
 
 ComplexCanvas::~ComplexCanvas()

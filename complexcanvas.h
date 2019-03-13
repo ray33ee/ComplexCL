@@ -67,8 +67,6 @@ private:
 
     static bool getBestDevice(int platCount, cl_device_id *device, cl_platform_id *platform, bool fp64);
 
-    static void clErrFunction(cl_program, void* data);
-
     void errHandler(cl_int err, const char* string);
 
 

@@ -104,6 +104,18 @@ private:
      */
     QString _formula;
 
+    /** Pattern to match floating point numbers. Distinguishing unary and binary +- operators */
+    //static QString floatingRegex = "(?:(?:(?<=[(*/^])|^)[+-]*)?(?:\\b[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+\\b)(?:e[-+]*?[0-9]+\\b)?";
+
+    /** Pattern to match supported functions */
+    //static QString functionsRegex;
+
+    /** Pattern to match supported constants */
+    //static QString constantsRegex = "e|pi|i";
+
+    /** Pattern to match supported operators */
+    //static QString operatorsRegex = "[*/^]|[+-]+";
+
 public:
 
     /**
@@ -116,6 +128,12 @@ public:
      * @param formula
      */
     Evaluator(QString formula);
+
+    /**
+     * @brief setString converts the string into the token list
+     * @param formula equation to convert
+     */
+    void setString(QString formula);
 
     /**
      * @brief getTokens gets the pointer to the array of tokens using double precision

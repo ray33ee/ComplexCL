@@ -24,9 +24,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11
 
-INCLUDEPATH += "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v3.2\include"
-
-LIBS += -L"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v3.2\lib\Win32"
+LIBS += -L"E:\Software Projects\Qt\ComplexCL\lib"
 
  LIBS+= -lOpenCL
 
@@ -44,6 +42,9 @@ HEADERS += \
 FORMS += \
         mainwindow.ui
 
+RESOURCES     = \
+    res.qrc
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
@@ -52,3 +53,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
     changelog.txt \
     ToDo.txt
+
+RESOURCES +=

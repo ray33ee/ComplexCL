@@ -2,15 +2,20 @@
 
 Evaluator::Evaluator()
 {
-    _formula = "z";
-    _tokens.append(Token<double>(VARIABLE));
-    _tokens.append(Token<double>(CONSTANT, 2.0));
-    _tokens.append(Token<double>(POWER));
+    setString("z");
 }
 
 Evaluator::Evaluator(QString formula)
 {
+    setString(formula);
+}
 
+void Evaluator::setString(QString formula)
+{
+    _formula = formula;
+    _tokens.append(Token<double>(VARIABLE));
+    _tokens.append(Token<double>(CONSTANT, 6.0));
+    _tokens.append(Token<double>(POWER));
 }
 
 Token<double>* Evaluator::getTokens()
@@ -35,7 +40,6 @@ Token<float>* Evaluator::getFloatTokens()
 
         _floatTokens.append(item);
     }
-
 
     return _floatTokens.data();
 }
