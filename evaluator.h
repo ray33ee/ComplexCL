@@ -2,8 +2,13 @@
 #define EVALUATOR_H
 
 #include <complex>
+#include <cmath>
+#include <bits/stdc++.h>
 #include <QVector>
 #include <QString>
+#include <QRegExp>
+#include <QStack>
+#include <exception>
 
 #include <QDebug>
 
@@ -13,35 +18,6 @@ enum TokenType
     VARIABLE = 1,
     OPERATOR = 2,
     CONSTANT = 3
-};
-
-enum OperatorType
-{
-    ADD = 0,
-    SUBTRACT = 1,
-    MULTIPLY = 2,
-    DIVIDE = 3,
-    POWER = 4,
-    LOG = 5,
-    NEGATE = 6,
-    CONJUGATE = 7,
-    SQRT = 8,
-    LN = 9,
-    EXP = 10,
-    SINH = 11,
-    COSH = 12,
-    TANH = 13,
-    SIN = 14,
-    COS = 15,
-    TAN = 16,
-    ASINH = 17,
-    ACOSH = 18,
-    ATANH = 19,
-    ASIN = 20,
-    ACOS = 21,
-    ATAN = 22,
-    ABS = 23,
-    ARG = 24
 };
 
 /**
@@ -54,13 +30,16 @@ public:
 
 
 
+    /** List of all valid operators and functions */
+    static QStringList allfunctions;
+
     union TokenData
     {
         std::complex<T>    _value;
-        OperatorType            _operator;
+        int                 _operator;
 
         TokenData(std::complex<T> val): _value(val) { }
-        TokenData(OperatorType val): _operator(val) { }
+        TokenData(int val): _operator(val) { }
     } _data;
 
     TokenType _type;
@@ -68,7 +47,7 @@ public:
     Token() :  _data(0), _type(INVALID) {}
 
     Token(TokenType type, std::complex<T> data = 0.0) : _data(data), _type(type) {  }
-    Token(OperatorType op) : _data(op), _type(OPERATOR) {  }
+    Token(int op) : _data(op), _type(OPERATOR) {  }
 
     QString toString() const
     {
@@ -77,7 +56,7 @@ public:
         else if (_type == CONSTANT)
             return QString() + "{ " + QString::number(_data._value.real()) + ", " + QString::number(_data._value.imag()) + " }";
         else if (_type == OPERATOR)
-            return QString() + "{ " + QString::number((int)_data._operator) + " }";
+            return QString() + "{ " + allfunctions[_data._operator] + " }";
 
 
     }
@@ -105,18 +84,89 @@ private:
     QString _formula;
 
     /** Pattern to match floating point numbers. Distinguishing unary and binary +- operators */
-    //static QString floatingRegex = "(?:(?:(?<=[(*/^])|^)[+-]*)?(?:\\b[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+\\b)(?:e[-+]*?[0-9]+\\b)?";
+    static QString floatingRegex;
 
     /** Pattern to match supported functions */
-    //static QString functionsRegex;
+    static QString functionsRegex;
 
     /** Pattern to match supported constants */
-    //static QString constantsRegex = "e|pi|i";
+    static QString constantsRegex;
 
     /** Pattern to match supported operators */
-    //static QString operatorsRegex = "[*/^]|[+-]+";
+    static QString operatorsRegex;
+
+    /** Pattern to match string function labels */
+    static QString labelRegex;
+
+    /** Pattern to match tokens in equation */
+    static QString equationRegex;
+
 
 public:
+
+    /* Base exception from which all parse-based exceptions inherit */
+    class EvaluatorParseException : public std::exception
+    {
+    private:
+        QString _token;
+
+    public:
+
+        EvaluatorParseException(QString token): std::exception(), _token(token) {}
+
+        QString getToken() const { return _token; }
+
+    };
+
+    class FloatingFormatException : public EvaluatorParseException
+    {
+    public:
+        FloatingFormatException(QString token): EvaluatorParseException(token) {}
+
+        virtual const char* what() const throw() { return (QString() + "Invalid number format - " + getToken()).toStdString().data(); }
+    };
+
+    class FloatingOverflowException : public EvaluatorParseException
+    {
+    public:
+        FloatingOverflowException(QString token): EvaluatorParseException(token) {}
+
+        virtual const char* what() const throw() { return (QString() + "Number (" + getToken() + ") is too large to represent.").toStdString().data(); }
+    };
+
+    class InvalidOperatorUseException : public EvaluatorParseException
+    {
+    public:
+        InvalidOperatorUseException(): EvaluatorParseException("") {}
+
+        virtual const char* what() const throw() { return (QString() + "Invalid use of operator detected in formula.").toStdString().data(); }
+    };
+
+    class InvalidTokenException : public EvaluatorParseException
+    {
+    public:
+        InvalidTokenException(QString token): EvaluatorParseException(token) {}
+
+        virtual const char* what() const throw() { return (QString() + "Invalid token '" + getToken() + "' detected in formula.").toStdString().data(); }
+    };
+
+    class MissingLeftBracketException : public EvaluatorParseException
+    {
+    public:
+        MissingLeftBracketException(): EvaluatorParseException("") {}
+
+        virtual const char* what() const throw() { return (QString() + "Missing left bracket in formula").toStdString().data(); }
+    };
+
+    class MissingRightBracketException : public EvaluatorParseException
+    {
+    public:
+        MissingRightBracketException(): EvaluatorParseException("") {}
+
+        virtual const char* what() const throw() { return (QString() + "Missing right bracket in formula").toStdString().data(); }
+    };
+
+
 
     /**
      * @brief Evaluator constructs an empty evaluator class
@@ -171,6 +221,49 @@ public:
      * @return the output value, f(z).
      */
     std::complex<double> operator()(const std::complex<double> &z);
+
+    /**
+     * @brief verify() performs a quick run of the equation, and returns true if a single element remains on the virtual stack, else returns false.
+     * @return true if the tokenlist is correct, otherwise false
+     */
+    bool verify();
+
+    /**
+     * @brief isNum Returns true if token is a number as defined by the floatingRegex regex
+     * @param token string to test
+     * @return true if the token is a valid number
+     */
+    static bool isNum(QString token);
+
+    /**
+     * @brief isOp determines whether the token is an operator, as defined by the operatorRegex
+     * @param token the token to test
+     * @return true if the token is an operator
+     */
+    static bool isOp(QString token);
+
+    /**
+     * @brief isFunction determines whether the token is a function name, as defined by functionsRegex
+     * @param token the token to test
+     * @return true if the token is a function
+     */
+    static bool isFunction(QString token);
+
+    /**
+     * @brief getPrecedence gets the numerical precedence of the operator
+     * @param token operator
+     * @return precedence of operator
+     */
+    static int getPrecedence(QString token);
+
+    /**
+     * @brief getIndex gets thje numerical identifier of the function or operator, as defined by allfunctions
+     * @param token the operator or function
+     * @return an index from 0-25 representing the function
+     */
+    static int getIndex(QString token);
 };
+
+
 
 #endif // EVALUATOR_H

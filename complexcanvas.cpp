@@ -45,7 +45,7 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _function
     std::string ks = kernelsource.toStdString();
     const char* kernelS = ks.data();
 
-    cout << kernelS << endl;
+    //cout << kernelS << endl;
 
     cl_program program = clCreateProgramWithSource(_context, 1, &kernelS, nullptr, &_error);
     errHandler(_error, "clCreateProgramWithSource");
@@ -65,7 +65,7 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _function
 
     setScene(&_scene);
 
-    updateFunction(Evaluator(), {-2, -2}, {4, 4});
+updateFunction(Evaluator(), {-10, -10}, {20, 20});
 
 }
 
@@ -184,7 +184,7 @@ void ComplexCanvas::drawCanvas()
     using namespace std;
 
     size_t w = static_cast<size_t>(width());
-    size_t h = static_cast<size_t>(height());
+    size_t h = static_cast<size_t>(height()-36);
     size_t area = w*h;
 
     cl_event kernelEvent;
@@ -271,7 +271,7 @@ void ComplexCanvas::resizeEvent(QResizeEvent *)
     using namespace std;
 
     int w = width();
-    int h = height();
+    int h = height()-36;
 
     int area = w * h;
 

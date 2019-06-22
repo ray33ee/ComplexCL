@@ -35,7 +35,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QToolBar" name="mainToolBar">
+  <widget class="CustomToolbar" name="mainToolBar">
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
@@ -51,6 +51,11 @@
    <class>ComplexCanvas</class>
    <extends>QGraphicsView</extends>
    <header>complexcanvas.h</header>
+  </customwidget>
+  <customwidget>
+   <class>CustomToolbar</class>
+   <extends>QToolBar</extends>
+   <header location="global">customtoolbar.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

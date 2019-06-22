@@ -2,4 +2,21 @@
     <qresource prefix="/OpenCL">
         <file>kernel/kernel.cl</file>
     </qresource>
+    <qresource prefix="/resources">
+        <file>icons/final.ico</file>
+        <file>toolbar/calculator.png</file>
+        <file>toolbar/new.png</file>
+        <file>toolbar/newton.png</file>
+        <file>toolbar/pan.png</file>
+        <file>toolbar/redo.png</file>
+        <file>toolbar/refresh.png</file>
+        <file>toolbar/save.png</file>
+        <file>toolbar/undo.png</file>
+        <file>toolbar/zoom.png</file>
+        <file>toolbar/zoomin.png</file>
+        <file>toolbar/zoomout.png</file>
+        <file>toolbar/centre.png</file>
+        <file>toolbar/history.png</file>
+        <file>toolbar/speed.png</file>
+    </qresource>
 </RCC>

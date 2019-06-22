@@ -1,3 +1,4 @@
+
 #-------------------------------------------------
 #
 # Project created by QtCreator 2019-03-03T20:01:33
@@ -29,18 +30,23 @@ LIBS += -L"E:\Software Projects\Qt\ComplexCL\lib"
  LIBS+= -lOpenCL
 
 SOURCES += \
+    customtoolbar.cpp \
         main.cpp \
         mainwindow.cpp \
     evaluator.cpp \
     complexcanvas.cpp \
+    newdialog.cpp
 
 HEADERS += \
+    customtoolbar.h \
         mainwindow.h \
     complexcanvas.h \
     evaluator.h \
+    newdialog.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+        newdialog.ui
 
 RESOURCES     = \
     res.qrc

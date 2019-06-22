@@ -1,3 +1,9 @@
+Version 1.0.6
+    - Infix to prefix conversion implemented
+    - equationRegex modified to accept all string combinations. Invalid combinations are regected during parsing
+    - Added customtoolbar class, handling toolbar buttons and code
+    - Implemented new button feature
+
 Version 1.0.5
     - Absolute paths converted to relative paths
     - Warnings cleared
