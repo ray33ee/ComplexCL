@@ -19,18 +19,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::resizeEvent(QResizeEvent *)
 {
-    ui->complexcanvas->setGeometry(ui->complexcanvas->geometry().x(), ui->complexcanvas->geometry().y(), width() - 20, height() - 5);
+    ui->complexcanvas->setGeometry(ui->complexcanvas->geometry().x(), ui->complexcanvas->geometry().y(), width() - 15, height() - 110);
 }
 
 void MainWindow::newButtonClick()
 {
     _newdialog->exec();
 
-    qDebug() << "Min: " << _newdialog->getMin().real() << " " << _newdialog->getMin().imag();
-    qDebug() << "Max: " << _newdialog->getMax().real() << " " << _newdialog->getMax().imag();
-    qDebug() << "Func: " << _newdialog->getEvaluator().getFormula();
+    qDebug() << _newdialog->getLandscape().toString();
 
-    ui->complexcanvas->updateFunction(_newdialog->getEvaluator(), _newdialog->getMin(), _newdialog->getMax() - _newdialog->getMin());
+    ui->complexcanvas->updateFunction(_newdialog->getLandscape());
 
     ui->complexcanvas->drawCanvas();
 }

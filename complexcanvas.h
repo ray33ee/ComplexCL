@@ -5,7 +5,7 @@
 #include <CL/cl.h>
 #include <iostream>
 #include <QFile>
-#include "evaluator.h"
+#include "landscape.h"
 #include <complex>
 #include <QDebug>
 #include <QResizeEvent>
@@ -24,10 +24,12 @@ public:
     explicit ComplexCanvas(QWidget *parent = nullptr);
 
     int getArea() const;
+    int width() const;
+    int height() const;
 
     void drawCanvas();
 
-    void updateFunction(Evaluator function, std::complex<double> min, std::complex<double> diff);
+    void updateFunction(Landscape land);
 
     virtual void resizeEvent(QResizeEvent *ev);
 
@@ -54,12 +56,8 @@ private:
     QGraphicsScene      _scene;
     QImage              _image;
 
-    //Function to graph
-    Evaluator           _function;
-
-    //Bounding rectangle
-    std::complex<double> _min;
-    std::complex<double> _diff;
+    //Landscape to plot
+    Landscape           _land;
 
     int                 _maxArea;
 

@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include <QMessageBox>
-#include <evaluator.h>
+#include <landscape.h>
 
 namespace Ui {
 class NewDialog;
@@ -17,18 +17,16 @@ public:
     explicit NewDialog(QWidget *parent = nullptr);
     ~NewDialog();
 
-    std::complex<double> getMin() const { return _min; }
-    std::complex<double> getMax() const { return _max; }
+    const Landscape& getLandscape() const { return _land; }
 
-    Evaluator getEvaluator() const { return _function; }
+    void setLandscape(const Landscape &land) { _land = land; }
 
 private:
     Ui::NewDialog *ui;
 
-    Evaluator _function;
+    Landscape _land;
 
-    std::complex<double> _min;
-    std::complex<double> _max;
+
 
 public slots:
     void accept();

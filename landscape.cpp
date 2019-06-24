@@ -1,6 +1,6 @@
-#include "evaluator.h"
+#include "landscape.h"
 
-QString Evaluator::floatingRegex = "[-+]?(?:\\b[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+\\b)(?:[eE][-+]?[0-9]+\\b)?";
+QString Evaluator::floatingRegex = "(?:(?:(?<=[(*/^])|^)[+-]*)?(?:\\b[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+\\b)(?:e[-+]*?[0-9]+\\b)?";
 
 
 QString Evaluator::functionsRegex = "log|neg|conj|sqrt|ln|exp|sinh|cosh|tanh|sin|cos|tan|asinh|acosh|atanh|asin|acos|atan|inv|mod|arg";
@@ -21,8 +21,8 @@ QStringList Token<T>::allfunctions = { "+", "-", "*", "/", "^",
 
 Evaluator::Evaluator()
 {
-    //setString("(z^2+i)*(z^2-3)/(z+1)*(z-4)");
-    setString("z^z");
+    //setString("(z^2+i)*(z^2-3)/((z+1)*(z-4))");
+    setString("z");
     //setString("z ^ 2");
 }
 
@@ -43,13 +43,16 @@ void Evaluator::setString(QString formula)
 
     QStack<QString> opStack;
 
-    static QRegExp rx(equationRegex);
+    static QRegularExpression rx(equationRegex);
 
     static auto isUnaryNegate = [=](QString token) { return token == "-" && ((_tokens.isEmpty() && opStack.isEmpty()) || prevToken == "(" || prevToken == "neg" || isOp(prevToken)); };
 
-    while ((pos = rx.indexIn(formula, pos)) != -1)
+    auto global = rx.globalMatch(formula);
+
+    while (global.hasNext())
     {
-        QString token = rx.cap(1);
+
+        QString token = global.next().captured(1);
 
         qDebug() << "Token: " << token;
 
@@ -110,12 +113,19 @@ void Evaluator::setString(QString formula)
         }
         else if (token == ")"|| token == "}" || token == "]") //Right bracket
         {
+            qDebug() << "Empty?: " << !opStack.isEmpty();
+
+            qDebug() << "    opstack: " << opStack;
+
             while (!opStack.isEmpty())
             {
                 if (opStack.top() != "(")
                     _tokens.append(Token<double>(getIndex(opStack.pop())));
                 else
+                {
+                    qDebug() << "Break!";
                     break;
+                }
             }
 
             if (opStack.isEmpty())
@@ -125,11 +135,9 @@ void Evaluator::setString(QString formula)
 
             opStack.pop(); //Pop the bracket
 
-            if (opStack.isEmpty())
-                return;
-
-            if (isFunction(opStack.top()) || isOp(opStack.top()))
-                _tokens.append(Token<double>(getIndex(opStack.pop())));
+            if (!opStack.isEmpty())
+                if (isFunction(opStack.top()) || isOp(opStack.top()))
+                    _tokens.append(Token<double>(getIndex(opStack.pop())));
 
         }
         else
@@ -138,7 +146,6 @@ void Evaluator::setString(QString formula)
         }
 
         prevToken =  token;
-        pos += rx.matchedLength();
     }
 
     while (!opStack.isEmpty())

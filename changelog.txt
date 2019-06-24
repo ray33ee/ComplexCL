@@ -1,3 +1,10 @@
+Version 1.0.7
+    - Fixed image scaling issue
+    - Added minimum size to main form
+    - Evaluator, min and max domain encapsulated in landscape class
+    - floatingRegex issue fixed (changed QRegExp to QRegularExpression)
+    - Fixed ')' bug (parser was stopping on the first ')')
+
 Version 1.0.6
     - Infix to prefix conversion implemented
     - equationRegex modified to accept all string combinations. Invalid combinations are regected during parsing

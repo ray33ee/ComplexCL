@@ -31,17 +31,17 @@ LIBS += -L"E:\Software Projects\Qt\ComplexCL\lib"
 
 SOURCES += \
     customtoolbar.cpp \
+    landscape.cpp \
         main.cpp \
         mainwindow.cpp \
-    evaluator.cpp \
     complexcanvas.cpp \
     newdialog.cpp
 
 HEADERS += \
     customtoolbar.h \
+    landscape.h \
         mainwindow.h \
     complexcanvas.h \
-    evaluator.h \
     newdialog.h
 
 FORMS += \

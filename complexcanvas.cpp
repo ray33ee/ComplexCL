@@ -1,6 +1,6 @@
 #include "complexcanvas.h"
 
-ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _function(), _maxArea(0)
+ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _land(Landscape()), _maxArea(0)
 {
     using namespace std;
 
@@ -65,7 +65,7 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _function
 
     setScene(&_scene);
 
-updateFunction(Evaluator(), {-10, -10}, {20, 20});
+    updateFunction(_land);
 
 }
 
@@ -174,6 +174,16 @@ bool ComplexCanvas::getBestDevice(int platCount, cl_device_id *device, cl_platfo
     return fp64;
 }
 
+int ComplexCanvas::width() const
+{
+    return QGraphicsView::width() - 2;
+}
+
+int ComplexCanvas::height() const
+{
+    return QGraphicsView::height() - 2;
+}
+
 int ComplexCanvas::getArea() const
 {
     return width() * height();
@@ -184,12 +194,12 @@ void ComplexCanvas::drawCanvas()
     using namespace std;
 
     size_t w = static_cast<size_t>(width());
-    size_t h = static_cast<size_t>(height()-36);
+    size_t h = static_cast<size_t>(height());
     size_t area = w*h;
 
     cl_event kernelEvent;
 
-    int stackMax = _function.getStackMax();
+    int stackMax = _land.getStackMax();
 
     size_t workSize[] = { w, h };
 
@@ -219,25 +229,23 @@ void ComplexCanvas::drawCanvas()
     clReleaseMemObject(stack);
 }
 
-void ComplexCanvas::updateFunction(Evaluator function, std::complex<double> min, std::complex<double> diff)
+void ComplexCanvas::updateFunction(Landscape land)
 {
     using namespace std;
 
-    _function = function;
-    _min = min;
-    _diff = diff;
+    _land = land;
 
-    size_t tokenCount = static_cast<size_t>(_function.getCount());
+    size_t tokenCount = static_cast<size_t>(_land.getCount());
 
-    int stackMax = _function.getStackMax();
+    int stackMax = _land.getStackMax();
 
     _tokensBuff = clCreateBuffer(_context, CL_MEM_READ_ONLY, tokenCount * sizeof(Token<double>), nullptr, &_error);
     cout << "Create tokens buffer. Code " << _error << "." << endl;
 
     if (_doublePrecision)
-        _error = clEnqueueWriteBuffer(_queue, _tokensBuff, CL_TRUE, 0, tokenCount * sizeof(Token<double>), _function.getTokens(), 0, nullptr, &_writeEvent);
+        _error = clEnqueueWriteBuffer(_queue, _tokensBuff, CL_TRUE, 0, tokenCount * sizeof(Token<double>), _land.getTokens(), 0, nullptr, &_writeEvent);
     else
-        _error = clEnqueueWriteBuffer(_queue, _tokensBuff, CL_TRUE, 0, tokenCount * sizeof(Token<float>), _function.getFloatTokens(), 0, nullptr, &_writeEvent);
+        _error = clEnqueueWriteBuffer(_queue, _tokensBuff, CL_TRUE, 0, tokenCount * sizeof(Token<float>), _land.getFloatTokens(), 0, nullptr, &_writeEvent);
 
     cout << "Create populate tokens buffer. Code " << _error << "." << endl;
 
@@ -246,15 +254,22 @@ void ComplexCanvas::updateFunction(Evaluator function, std::complex<double> min,
     _error |= clSetKernelArg(_kernel, 0, sizeof(cl_mem), &_tokensBuff);
     _error |= clSetKernelArg(_kernel, 2, sizeof(int), &tokenCount);
 
+    auto min = _land.getMin();
+    auto diff = _land.getDiff();
+
     if (_doublePrecision)
     {
-        _error |= clSetKernelArg(_kernel, 3, sizeof(complex<double>), &_min);
-        _error |= clSetKernelArg(_kernel, 4, sizeof(complex<double>), &_diff);
+
+
+        _error |= clSetKernelArg(_kernel, 3, sizeof(complex<double>), &min);
+        _error |= clSetKernelArg(_kernel, 4, sizeof(complex<double>), &diff);
     }
     else
     {
-        complex<float> minf(static_cast<float>(_min.real()), static_cast<float>(_min.imag()));
-        complex<float> difff(static_cast<float>(_diff.real()), static_cast<float>(_diff.imag()));
+        complex<float> minf(static_cast<float>(_land.getMin().real()), static_cast<float>(_land.getMin().imag()));
+        complex<float> difff(static_cast<float>(_land.getDiff().real()), static_cast<float>(_land.getDiff().imag()));
+
+        //complex<float> minf = static_cast<complex<float> >(min);
 
         _error |= clSetKernelArg(_kernel, 3, sizeof(complex<float>), &minf);
         _error |= clSetKernelArg(_kernel, 4, sizeof(complex<float>), &difff);
@@ -271,7 +286,7 @@ void ComplexCanvas::resizeEvent(QResizeEvent *)
     using namespace std;
 
     int w = width();
-    int h = height()-36;
+    int h = height();
 
     int area = w * h;
 

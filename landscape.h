@@ -6,7 +6,7 @@
 #include <bits/stdc++.h>
 #include <QVector>
 #include <QString>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QStack>
 #include <exception>
 
@@ -262,6 +262,73 @@ public:
      * @return an index from 0-25 representing the function
      */
     static int getIndex(QString token);
+};
+
+/**
+ * @brief The Landscape class is functionally similar to the Evaluator class, but contains extra properties for the minimum and maximum domain. This
+ * class contains all the information needed to plot a canvas
+ */
+class Landscape : public Evaluator
+{
+private:
+    std::complex<double> _min;
+    std::complex<double> _diff;
+
+public:
+
+    Landscape():
+        Evaluator(), _min({-10, -10}), _diff({20, 20})
+    {
+
+    }
+
+    Landscape(QString formula, const std::complex<double> &min, const std::complex<double> &max):
+        Evaluator(formula), _min(min), _diff(max - min)
+    {
+
+    }
+
+    void setDomain(const std::complex<double> &min, const std::complex<double> &max)
+    {
+        _min = min;
+        _diff = max - min;
+    }
+
+    void setDomain(QString min, QString max)
+    {
+        Evaluator Min;
+        Evaluator Max;
+
+        /*try
+        {*/
+        Min.setString(min);
+        Max.setString(max);
+
+        /*}
+        catch (Evaluator::EvaluatorParseException e)
+        {
+            QMessageBox::warning(this, "ComplexCL", "Formula parse error - " + QString(e.what()), QMessageBox::Ok);
+            return;
+        }*/
+
+        _min = Min(0.0);
+        _diff = Max(0.0) - _min;
+
+
+    }
+
+
+    std::complex<double> operator()(const std::complex<double> &z) { return Evaluator::operator()(z); }
+
+
+    std::complex<double> getMin() const { return _min; }
+    std::complex<double> getDiff() const { return _diff; }
+
+    QString toString() const { return QString() + getFormula() + ", from {" + QString::number(getMin().real()) + ", " + QString::number(getMin().imag()) + "} to {"  + QString::number(getMin().real()) + ", " + QString::number(getMin().imag()) + "}"; }
+
+    //std::complex<double> getMax() const { return _min + _diff; }
+
+
 };
 
 

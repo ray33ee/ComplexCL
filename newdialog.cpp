@@ -23,14 +23,10 @@ void NewDialog::accept()
         return;
     }
 
-    Evaluator min;
-    Evaluator max;
-
     try
     {
-        min.setString(ui->txtMin->text());
-        max.setString(ui->txtMax->text());
-        _function.setString(ui->txtFormula->toPlainText());
+        _land.setDomain(ui->txtMin->text(), ui->txtMax->text());
+        _land.setString(ui->txtFormula->toPlainText());
 
     }
     catch (Evaluator::EvaluatorParseException e)
@@ -38,9 +34,6 @@ void NewDialog::accept()
         QMessageBox::warning(this, "ComplexCL", "Formula parse error - " + QString(e.what()), QMessageBox::Ok);
         return;
     }
-
-    _min = min(0.0);
-    _max = max(0.0);
 
 
     QDialog::accept();
