@@ -3,6 +3,8 @@
 
 #include <QToolBar>
 #include <mainwindow.h>
+#include <complexcanvas.h>
+#include <QMouseEvent>
 
 class CustomToolbar : public QToolBar
 {
@@ -18,7 +20,6 @@ private:
     QAction* panButton;
     QAction* zoomButton;
     QAction* newtonButton;
-    QAction* refreshButton;
     QAction* calculatorButton;
     QAction* undoButton;
     QAction* redoButton;

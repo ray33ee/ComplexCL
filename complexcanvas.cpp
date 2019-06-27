@@ -1,4 +1,5 @@
 #include "complexcanvas.h"
+#include "mainwindow.h"
 
 ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _land(Landscape()), _maxArea(0)
 {
@@ -63,9 +64,11 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _land(Lan
 
     clReleaseProgram(program);
 
+    setMouseTracking(true);
+
     setScene(&_scene);
 
-    updateFunction(_land);
+    drawLandscape();
 
 }
 
@@ -131,7 +134,9 @@ bool ComplexCanvas::getBestDevice(int platCount, cl_device_id *device, cl_platfo
             err |= clGetDeviceInfo(devices[dev], CL_DEVICE_MAX_COMPUTE_UNITS, 1024, str, nullptr);
             score *= *reinterpret_cast<cl_uint*>(str);
 
-            cout << "    Get device " << dev << " score (" << score << "). Code " << err << endl;
+            err |= clGetDeviceInfo(devices[dev], CL_DEVICE_NAME, 1024, str, nullptr);
+
+            cout << "    Get device " << str << " score (" << score << "). Code " << err << endl;
 
 
             if (fp64) //if double precision is required,
@@ -193,6 +198,8 @@ void ComplexCanvas::drawCanvas()
 {
     using namespace std;
 
+    qDebug() << "Draw " << _land.toString();
+
     size_t w = static_cast<size_t>(width());
     size_t h = static_cast<size_t>(height());
     size_t area = w*h;
@@ -217,23 +224,29 @@ void ComplexCanvas::drawCanvas()
     _error |= clSetKernelArg(_kernel, 1, sizeof(cl_mem), &stack);
     //cout << "Arguments set. Code " << _error << "." << endl;
 
+    QTime tmr;
+    tmr.start();
+
     _error = clEnqueueNDRangeKernel(_queue, _kernel, 2, nullptr, workSize, nullptr, 1, &_writeEvent, &kernelEvent);
     //cout << "Queue kernel. Code " << _error << "." << endl;
 
-    _error = clEnqueueReadBuffer(_queue, _colourBuff, CL_TRUE, 0, area * sizeof(int), _image.bits(), 1, &kernelEvent, nullptr);
+    //_error = clWaitForEvents(1, &kernelEvent);
+    cout << "Waiting for kernel. Code " << _error << "." << endl;
+
+    _error = clEnqueueReadBuffer(_queue, _colourBuff, CL_TRUE, 0, area * sizeof(int), _image.bits(), 0, nullptr, nullptr);
     //cout << "Read result. Code " << _error << "." << endl;
 
     _scene.clear();
     _scene.addPixmap(QPixmap::fromImage(_image));
 
+    qDebug() << "Elapsed: " << tmr.elapsed();
+
     clReleaseMemObject(stack);
 }
 
-void ComplexCanvas::updateFunction(Landscape land)
+void ComplexCanvas::drawLandscape()
 {
     using namespace std;
-
-    _land = land;
 
     size_t tokenCount = static_cast<size_t>(_land.getCount());
 
@@ -254,22 +267,18 @@ void ComplexCanvas::updateFunction(Landscape land)
     _error |= clSetKernelArg(_kernel, 0, sizeof(cl_mem), &_tokensBuff);
     _error |= clSetKernelArg(_kernel, 2, sizeof(int), &tokenCount);
 
-    auto min = _land.getMin();
+    auto min = (_land.getMin());
     auto diff = _land.getDiff();
 
     if (_doublePrecision)
     {
-
-
         _error |= clSetKernelArg(_kernel, 3, sizeof(complex<double>), &min);
         _error |= clSetKernelArg(_kernel, 4, sizeof(complex<double>), &diff);
     }
     else
     {
-        complex<float> minf(static_cast<float>(_land.getMin().real()), static_cast<float>(_land.getMin().imag()));
-        complex<float> difff(static_cast<float>(_land.getDiff().real()), static_cast<float>(_land.getDiff().imag()));
-
-        //complex<float> minf = static_cast<complex<float> >(min);
+        complex<float> minf = static_cast<complex<float> >(min);
+        complex<float> difff = static_cast<complex<float> >(diff);
 
         _error |= clSetKernelArg(_kernel, 3, sizeof(complex<float>), &minf);
         _error |= clSetKernelArg(_kernel, 4, sizeof(complex<float>), &difff);
@@ -279,6 +288,19 @@ void ComplexCanvas::updateFunction(Landscape land)
 
     errHandler(_error, "clSetKernelArg");
 
+    drawCanvas();
+
+}
+
+void ComplexCanvas::drawLandscape(Landscape land)
+{
+    _land = land;
+
+    MainWindow* win = (MainWindow*)parent()->parent();
+
+    win->setLandscape(_land);
+
+    drawLandscape();
 }
 
 void ComplexCanvas::resizeEvent(QResizeEvent *)
@@ -312,6 +334,73 @@ void ComplexCanvas::resizeEvent(QResizeEvent *)
     errHandler(_error, "clSetKernelArg");
 
     drawCanvas();
+}
+
+std::complex<double> ComplexCanvas::interpolate(QMouseEvent* mouse)
+{
+
+    double tx = mouse->x();
+    double ty = height() - mouse->y();
+
+    //qDebug() << "    Size: " << _land.getMin().real() << " " << _land.getMin().imag() << " " << _land.getDiff().real() << " " << _land.getDiff().imag();
+
+    std::complex<double> ans = std::complex<double>(_land.getMin().real() + tx * _land.getDiff().real() / width(),
+                                                    _land.getMin().imag() + ty * _land.getDiff().imag() / height());
+
+    return ans;
+}
+
+void ComplexCanvas::mousePressEvent(QMouseEvent * ev)
+{
+     _pressVector = interpolate(ev);
+
+     //qDebug() << "    Press: " << _pressVector.real() << " " << _pressVector.imag();
+}
+
+void ComplexCanvas::mouseReleaseEvent(QMouseEvent * ev)
+{
+    auto thisVector = interpolate(ev);
+    auto diffVector = thisVector - _pressVector;
+
+    qDebug() << "    Click: " << _pressVector.real() << " " << _pressVector.imag() << " " << thisVector.real() << " " << thisVector.imag();
+
+    if (_mode == PAN)
+    {
+        _land.setMinDiff(_land.getMin() - diffVector, _land.getDiff());
+    }
+    else if (_mode == ZOOM)
+    {
+        auto min = std::complex<double>(std::min(_pressVector.real(), thisVector.real()), std::min(_pressVector.imag(), thisVector.imag()));
+        auto max = std::complex<double>(std::max(_pressVector.real(), thisVector.real()), std::max(_pressVector.imag(), thisVector.imag()));
+
+
+        qDebug() << "    Zoom: " << min.real() << " " << min.imag() << " " << max.real() << " " << max.imag();
+
+        _land.setDomain(min, max);
+
+    }
+    else //_mode == NEWTON
+    {
+
+    }
+
+    MainWindow* win = (MainWindow*)parent()->parent();
+
+    win->setLandscape(_land);
+
+    drawLandscape();
+
+}
+
+void ComplexCanvas::mouseMoveEvent(QMouseEvent *event)
+{
+    auto move = interpolate(event);
+
+    MainWindow* win = (MainWindow*)parent()->parent();
+
+    win->trace(move);
+
+    //qDebug() << move.real() << " " << move.imag();
 }
 
 ComplexCanvas::~ComplexCanvas()

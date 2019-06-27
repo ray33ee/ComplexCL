@@ -11,6 +11,9 @@
 #include <QResizeEvent>
 #include <QMessageBox>
 #include <QCoreApplication>
+#include <algorithm>
+
+#include <QTime>
 
 /**
  * @brief The ComplexCanvas class is responsible for drawing the complex landscape.
@@ -21,7 +24,16 @@ class ComplexCanvas : public QGraphicsView
 {
     Q_OBJECT
 public:
+    enum Mode
+    {
+        PAN, ZOOM, NEWTON
+    } _mode;
+
     explicit ComplexCanvas(QWidget *parent = nullptr);
+
+    Landscape* getReference() { return &_land; }
+
+    const Landscape& getLandscape() { return _land; }
 
     int getArea() const;
     int width() const;
@@ -29,9 +41,18 @@ public:
 
     void drawCanvas();
 
-    void updateFunction(Landscape land);
+    void drawLandscape();
+
+    void drawLandscape(Landscape land);
 
     virtual void resizeEvent(QResizeEvent *ev);
+
+    virtual void mousePressEvent(QMouseEvent *event);
+
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+
+    virtual void mouseMoveEvent(QMouseEvent *event);
+
 
     ~ComplexCanvas();
 
@@ -63,9 +84,13 @@ private:
 
     bool                _doublePrecision;
 
+    std::complex<double> _pressVector;
+
     static bool getBestDevice(int platCount, cl_device_id *device, cl_platform_id *platform, bool fp64);
 
     void errHandler(cl_int err, const char* string);
+
+    std::complex<double> interpolate(QMouseEvent* mouse);
 
 
 signals:

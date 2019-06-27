@@ -654,8 +654,13 @@ __kernel void get_landscape(__global struct Token* tokens, __global struct Compl
     //Get value of z for this thread
     struct Complex z;
     z.re = min.re + diff.re / width * get_global_id(0);
-    z.im = min.im + diff.im / height * get_global_id(1);
+    z.im = min.im + diff.im  - diff.im / height * get_global_id(1); //equivalent to z.im = min.im + diff.im / height * (height - get_global_id(1)); height - get_global_id(1) flips the canvas so min,min is bottom left
+    //z.im = min.im + diff.im / height * get_global_id(1);
+
+
 
     //Return the colour
-    colours[i] =  c_colour(evaluate(tokens, stack, token_count, area, i, z));
+    colours[i] = c_colour(evaluate(tokens, stack, token_count, area, i, z));
 }
+
+

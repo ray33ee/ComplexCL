@@ -30,6 +30,7 @@ LIBS += -L"E:\Software Projects\Qt\ComplexCL\lib"
  LIBS+= -lOpenCL
 
 SOURCES += \
+    customstatusbar.cpp \
     customtoolbar.cpp \
     landscape.cpp \
         main.cpp \
@@ -38,6 +39,7 @@ SOURCES += \
     newdialog.cpp
 
 HEADERS += \
+    customstatusbar.h \
     customtoolbar.h \
     landscape.h \
         mainwindow.h \

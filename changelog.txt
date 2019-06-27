@@ -1,3 +1,9 @@
+Version 1.0.8
+    - Landscapes now display with correct orientation
+    - Trace feature added, along with custom status bar
+    - Added zoomin/out feature
+    - Result copy no longer waits for kernel to finish
+
 Version 1.0.7
     - Fixed image scaling issue
     - Added minimum size to main form

@@ -19,8 +19,6 @@ CustomToolbar::CustomToolbar(QWidget* parent) : QToolBar (parent)
     zoomButton = new QAction(QIcon(":/resources/toolbar/zoom.png"), "", navigatorGroup);
     newtonButton = new QAction(QIcon(":/resources/toolbar/newton.png"), "", navigatorGroup);
 
-    refreshButton = new QAction(QIcon(":/resources/toolbar/refresh.png"), "", allButtons);
-
     calculatorButton = new QAction(QIcon(":/resources/toolbar/calculator.png"), "", allButtons);
 
     undoButton = new QAction(QIcon(":/resources/toolbar/undo.png"), "", allButtons);
@@ -56,9 +54,6 @@ CustomToolbar::CustomToolbar(QWidget* parent) : QToolBar (parent)
     addAction(newtonButton);
     addSeparator();
 
-    addAction(refreshButton);
-    addSeparator();
-
     addAction(calculatorButton);
     addSeparator();
 
@@ -86,8 +81,6 @@ CustomToolbar::CustomToolbar(QWidget* parent) : QToolBar (parent)
     zoomButton->setToolTip("Rectangle zoom tool");
     newtonButton->setToolTip("Zero-finding tool");
 
-    refreshButton->setToolTip("Refresh screen");
-
     calculatorButton->setToolTip("Calculator dialog");
 
     undoButton->setToolTip("Undo last action");
@@ -108,17 +101,61 @@ CustomToolbar::CustomToolbar(QWidget* parent) : QToolBar (parent)
 
 void CustomToolbar::buttonPressed(QAction* button)
 {
+    MainWindow* win = (MainWindow*)parent();
+
+
     if (button == newButton)
     {
-        MainWindow* win = (MainWindow*)parent();
-
         win->newButtonClick();
-
-
     }
     else if (button == saveButton)
     {
         qDebug() << "Save";
+    }
+    else if (button == panButton)
+    {
+        win->setMode(ComplexCanvas::Mode::PAN);
+    }
+    else if (button == zoomButton)
+    {
+        win->setMode(ComplexCanvas::Mode::ZOOM);
+    }
+    else if (button == newtonButton)
+    {
+        win->setMode(ComplexCanvas::Mode::NEWTON);
+    }
+    else if (button == calculatorButton)
+    {
+
+    }
+    else if (button == undoButton)
+    {
+
+    }
+    else if (button == redoButton)
+    {
+
+    }
+    else if (button == historyButton)
+    {
+
+    }
+    else if (button == centreButton)
+    {
+
+    }
+    else if (button == zinButton)
+    {
+        win->zoom(1.0/3);
+    }
+    else if (button == zoutButton)
+    {
+
+        win->zoom(3.0);
+    }
+    else if (button == priorityButton)
+    {
+
     }
 
 }

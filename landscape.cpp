@@ -19,6 +19,15 @@ QStringList Token<T>::allfunctions = { "+", "-", "*", "/", "^",
                                         "sinh", "cosh", "tanh", "sin", "cos", "tan", "asinh", "acosh", "atanh", "asin", "acos", "atan",
                                         "inv", "mod", "arg" };
 
+namespace std
+{
+    QString toString(std::complex<double> z)
+    {
+        double im = abs(z.imag());
+        return QString() + QString::number(z.real()) + (z.imag() < 0 ? " - " : " + ") + QString::number(im) + "*i";
+    }
+};
+
 Evaluator::Evaluator()
 {
     //setString("(z^2+i)*(z^2-3)/((z+1)*(z-4))");
@@ -37,7 +46,7 @@ void Evaluator::setString(QString formula)
 
     _tokens.clear();
 
-    int pos = 0;
+    formula.remove(QRegExp("[ \n\t]"));
 
     QString prevToken = "";
 
@@ -53,8 +62,6 @@ void Evaluator::setString(QString formula)
     {
 
         QString token = global.next().captured(1);
-
-        qDebug() << "Token: " << token;
 
         if (token == "z")
         {
@@ -113,9 +120,6 @@ void Evaluator::setString(QString formula)
         }
         else if (token == ")"|| token == "}" || token == "]") //Right bracket
         {
-            qDebug() << "Empty?: " << !opStack.isEmpty();
-
-            qDebug() << "    opstack: " << opStack;
 
             while (!opStack.isEmpty())
             {
@@ -123,7 +127,6 @@ void Evaluator::setString(QString formula)
                     _tokens.append(Token<double>(getIndex(opStack.pop())));
                 else
                 {
-                    qDebug() << "Break!";
                     break;
                 }
             }
@@ -168,10 +171,10 @@ void Evaluator::setString(QString formula)
     if (!verify())
         throw InvalidOperatorUseException();
 
-    for (Token<double> tok : _tokens)
+    /*for (Token<double> tok : _tokens)
     {
         qDebug() << "Prefix Token list: " << tok.toString();
-    }
+    }*/
 
 }
 

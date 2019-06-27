@@ -31,6 +31,8 @@ private:
 public slots:
     void accept();
 
+    virtual int exec();
+
 };
 
 #endif // NEWDIALOG_H

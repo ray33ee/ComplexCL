@@ -39,3 +39,12 @@ void NewDialog::accept()
     QDialog::accept();
 
 }
+
+int NewDialog::exec()
+{
+    ui->txtFormula->setText(_land.getFormula());
+    ui->txtMin->setText(toString(_land.getMin()));
+    ui->txtMax->setText(toString(_land.getMax()));
+
+    return QDialog::exec();
+}

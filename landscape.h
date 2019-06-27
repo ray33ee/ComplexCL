@@ -20,6 +20,11 @@ enum TokenType
     CONSTANT = 3
 };
 
+namespace std
+{
+    QString toString(complex<double> z);
+};
+
 /**
  * @brief The Token class represents a single token in a mathematical formula
  */
@@ -58,7 +63,7 @@ public:
         else if (_type == OPERATOR)
             return QString() + "{ " + allfunctions[_data._operator] + " }";
 
-
+        return QString() + "Error in Token::toString() function - Invalid type " + _type + ".";
     }
 };
 
@@ -317,16 +322,22 @@ public:
 
     }
 
+    void setMinDiff(const std::complex<double> &min, const std::complex<double> &diff)
+    {
+        _min = min;
+        _diff = diff;
+    }
+
 
     std::complex<double> operator()(const std::complex<double> &z) { return Evaluator::operator()(z); }
 
 
     std::complex<double> getMin() const { return _min; }
+    std::complex<double> getMax() const { return _min + _diff; }
     std::complex<double> getDiff() const { return _diff; }
 
     QString toString() const { return QString() + getFormula() + ", from {" + QString::number(getMin().real()) + ", " + QString::number(getMin().imag()) + "} to {"  + QString::number(getMin().real()) + ", " + QString::number(getMin().imag()) + "}"; }
 
-    //std::complex<double> getMax() const { return _min + _diff; }
 
 
 };
