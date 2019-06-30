@@ -4,14 +4,17 @@
 #include <QMainWindow>
 #include <newdialog.h>
 #include <complexcanvas.h>
-
+#include "interface.h"
+#include "landscape.h"
+#include "history.h"
+#include "historydialog.h"
 
 
 namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public Interface
 {
     Q_OBJECT
 
@@ -21,24 +24,38 @@ public:
 
     virtual void resizeEvent(QResizeEvent *e);
 
-    //Ui::MainWindow *getUi() { return ui; }
+    void setLandscape(const Landscape &land) { _newdialog->setLandscape(land); }
 
-    void newButtonClick();
+
+
+    void dialog();
 
     void trace(const std::complex<double> &z);
 
-    void setMode(ComplexCanvas::Mode mode);
+    void setMode(Mode mode);
 
     void zoom(double factor);
 
     void centre();
 
-    void setLandscape(const Landscape &land) { _newdialog->setLandscape(land); }
+    void setEnabled(bool b);
+
+
+    void add(const Landscape &land);
+
+    void redo();
+
+    void undo();
+
+    void history();
 
 private:
     Ui::MainWindow *ui;
 
+    History<Landscape> _history;
+
     NewDialog* _newdialog;
+    HistoryDialog* _historydialog;
 };
 
 #endif // MAINWINDOW_H

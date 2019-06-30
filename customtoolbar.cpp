@@ -101,28 +101,27 @@ CustomToolbar::CustomToolbar(QWidget* parent) : QToolBar (parent)
 
 void CustomToolbar::buttonPressed(QAction* button)
 {
-    MainWindow* win = (MainWindow*)parent();
-
+    Interface* win = dynamic_cast<Interface*>(parent());
 
     if (button == newButton)
     {
-        win->newButtonClick();
+        win->dialog();
     }
     else if (button == saveButton)
     {
-        qDebug() << "Save";
+
     }
     else if (button == panButton)
     {
-        win->setMode(ComplexCanvas::Mode::PAN);
+        win->setMode(Mode::PAN);
     }
     else if (button == zoomButton)
     {
-        win->setMode(ComplexCanvas::Mode::ZOOM);
+        win->setMode(Mode::ZOOM);
     }
     else if (button == newtonButton)
     {
-        win->setMode(ComplexCanvas::Mode::NEWTON);
+        win->setMode(Mode::NEWTON);
     }
     else if (button == calculatorButton)
     {
@@ -130,19 +129,19 @@ void CustomToolbar::buttonPressed(QAction* button)
     }
     else if (button == undoButton)
     {
-
+        win->undo();
     }
     else if (button == redoButton)
     {
-
+        win->redo();
     }
     else if (button == historyButton)
     {
-
+        win->history();
     }
     else if (button == centreButton)
     {
-
+        win->centre();
     }
     else if (button == zinButton)
     {

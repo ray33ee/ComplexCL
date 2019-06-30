@@ -30,9 +30,7 @@ namespace std
 
 Evaluator::Evaluator()
 {
-    //setString("(z^2+i)*(z^2-3)/((z+1)*(z-4))");
     setString("z");
-    //setString("z ^ 2");
 }
 
 Evaluator::Evaluator(QString formula)
@@ -170,11 +168,6 @@ void Evaluator::setString(QString formula)
     //Verify token list here
     if (!verify())
         throw InvalidOperatorUseException();
-
-    /*for (Token<double> tok : _tokens)
-    {
-        qDebug() << "Prefix Token list: " << tok.toString();
-    }*/
 
 }
 

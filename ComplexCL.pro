@@ -32,6 +32,7 @@ LIBS += -L"E:\Software Projects\Qt\ComplexCL\lib"
 SOURCES += \
     customstatusbar.cpp \
     customtoolbar.cpp \
+    historydialog.cpp \
     landscape.cpp \
         main.cpp \
         mainwindow.cpp \
@@ -41,12 +42,16 @@ SOURCES += \
 HEADERS += \
     customstatusbar.h \
     customtoolbar.h \
+    history.h \
+    historydialog.h \
+    interface.h \
     landscape.h \
         mainwindow.h \
     complexcanvas.h \
     newdialog.h
 
 FORMS += \
+        historydialog.ui \
         mainwindow.ui \
         newdialog.ui
 

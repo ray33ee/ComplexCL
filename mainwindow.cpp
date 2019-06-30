@@ -9,9 +9,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     _newdialog = new NewDialog(this);
 
+    _historydialog = new HistoryDialog(this);
+
     ui->statusBar->setLandscape(ui->complexcanvas->getReference());
 
-    setObjectName("Main WIndow");
+    add(Landscape());
 }
 
 MainWindow::~MainWindow()
@@ -21,21 +23,22 @@ MainWindow::~MainWindow()
 
 void MainWindow::resizeEvent(QResizeEvent *)
 {
+    //auto i = ui->complexcanvas;
     ui->complexcanvas->setGeometry(ui->complexcanvas->geometry().x(), ui->complexcanvas->geometry().y(), width() - 15, height() - 110);
 }
 
-void MainWindow::newButtonClick()
+void MainWindow::dialog()
 {
     _newdialog->setLandscape(ui->complexcanvas->getLandscape());
 
     _newdialog->exec();
 
-    qDebug() << _newdialog->getLandscape().toString();
-
     ui->complexcanvas->drawLandscape(_newdialog->getLandscape());
+
+    add(_newdialog->getLandscape());
 }
 
-void MainWindow::setMode(ComplexCanvas::Mode mode)
+void MainWindow::setMode(Mode mode)
 {
     ui->complexcanvas->_mode = mode;
 }
@@ -57,10 +60,56 @@ void MainWindow::zoom(double factor)
 
     ui->complexcanvas->drawLandscape(land);
 
-    qDebug() << toString(nmin) << " " << toString(ndiff) ;
+    add(land);
 }
 
 void MainWindow::centre()
 {
+    Landscape land = ui->complexcanvas->getLandscape();
 
+    land.setMinDiff(-land.getDiff()/2.0, land.getDiff());
+
+    ui->complexcanvas->drawLandscape(land);
+
+    add(land);
+}
+
+void MainWindow::setEnabled(bool b)
+{
+    ui->mainToolBar->setDisabled(b);
+}
+
+void MainWindow::add(const Landscape &land)
+{
+    _history.add(land);
+}
+
+void MainWindow::undo()
+{
+    if (!_history.isAtBottom())
+    {
+        auto un = _history.undo();
+        ui->complexcanvas->drawLandscape(un);
+    }
+}
+
+void MainWindow::redo()
+{
+    if (!_history.isAtTop())
+    {
+        auto un = _history.redo();
+        ui->complexcanvas->drawLandscape(un);
+    }
+}
+
+void MainWindow::history()
+{
+
+
+    _historydialog->setHistory(_history);
+
+    if (_historydialog->exec() == QDialog::Accepted)
+    {
+        ui->complexcanvas->drawLandscape(_history.revert(_historydialog->getIndex()));
+    }
 }

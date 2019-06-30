@@ -7,13 +7,16 @@
 #include <QFile>
 #include "landscape.h"
 #include <complex>
-#include <QDebug>
 #include <QResizeEvent>
 #include <QMessageBox>
 #include <QCoreApplication>
 #include <algorithm>
-
+#include "interface.h"
 #include <QTime>
+
+#ifdef QT_DEBUG
+#include <QDebug>
+#endif
 
 /**
  * @brief The ComplexCanvas class is responsible for drawing the complex landscape.
@@ -24,10 +27,7 @@ class ComplexCanvas : public QGraphicsView
 {
     Q_OBJECT
 public:
-    enum Mode
-    {
-        PAN, ZOOM, NEWTON
-    } _mode;
+    Mode _mode;
 
     explicit ComplexCanvas(QWidget *parent = nullptr);
 
@@ -92,10 +92,6 @@ private:
 
     std::complex<double> interpolate(QMouseEvent* mouse);
 
-
-signals:
-
-public slots:
 };
 
 #endif // COMPLEXCANVAS_H

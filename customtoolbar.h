@@ -2,7 +2,7 @@
 #define CUSTOMTOOLBAR_H
 
 #include <QToolBar>
-#include <mainwindow.h>
+#include <interface.h>
 #include <complexcanvas.h>
 #include <QMouseEvent>
 
@@ -31,6 +31,8 @@ private:
 
 public:
     CustomToolbar(QWidget* parent = nullptr);
+
+    void setEnabled(bool b) { allButtons->setEnabled(b); }
 
 public slots:
 

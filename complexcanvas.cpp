@@ -198,8 +198,6 @@ void ComplexCanvas::drawCanvas()
 {
     using namespace std;
 
-    qDebug() << "Draw " << _land.toString();
-
     size_t w = static_cast<size_t>(width());
     size_t h = static_cast<size_t>(height());
     size_t area = w*h;
@@ -231,15 +229,17 @@ void ComplexCanvas::drawCanvas()
     //cout << "Queue kernel. Code " << _error << "." << endl;
 
     //_error = clWaitForEvents(1, &kernelEvent);
-    cout << "Waiting for kernel. Code " << _error << "." << endl;
+    //cout << "Waiting for kernel. Code " << _error << "." << endl;
 
-    _error = clEnqueueReadBuffer(_queue, _colourBuff, CL_TRUE, 0, area * sizeof(int), _image.bits(), 0, nullptr, nullptr);
+    _error = clEnqueueReadBuffer(_queue, _colourBuff, CL_TRUE, 0, area * sizeof(int), _image.bits(), 1, &kernelEvent, nullptr);
     //cout << "Read result. Code " << _error << "." << endl;
 
     _scene.clear();
     _scene.addPixmap(QPixmap::fromImage(_image));
 
+#ifdef QT_DEBUG
     qDebug() << "Elapsed: " << tmr.elapsed();
+#endif
 
     clReleaseMemObject(stack);
 }
@@ -296,7 +296,7 @@ void ComplexCanvas::drawLandscape(Landscape land)
 {
     _land = land;
 
-    MainWindow* win = (MainWindow*)parent()->parent();
+    MainWindow* win = dynamic_cast<MainWindow*>(parent()->parent());
 
     win->setLandscape(_land);
 
@@ -362,29 +362,28 @@ void ComplexCanvas::mouseReleaseEvent(QMouseEvent * ev)
     auto thisVector = interpolate(ev);
     auto diffVector = thisVector - _pressVector;
 
-    qDebug() << "    Click: " << _pressVector.real() << " " << _pressVector.imag() << " " << thisVector.real() << " " << thisVector.imag();
+    MainWindow* win = (MainWindow*)parent()->parent();
+
 
     if (_mode == PAN)
     {
         _land.setMinDiff(_land.getMin() - diffVector, _land.getDiff());
+
+        win->add(_land);
     }
     else if (_mode == ZOOM)
     {
         auto min = std::complex<double>(std::min(_pressVector.real(), thisVector.real()), std::min(_pressVector.imag(), thisVector.imag()));
         auto max = std::complex<double>(std::max(_pressVector.real(), thisVector.real()), std::max(_pressVector.imag(), thisVector.imag()));
 
-
-        qDebug() << "    Zoom: " << min.real() << " " << min.imag() << " " << max.real() << " " << max.imag();
-
         _land.setDomain(min, max);
+        win->add(_land);
 
     }
     else //_mode == NEWTON
     {
 
     }
-
-    MainWindow* win = (MainWindow*)parent()->parent();
 
     win->setLandscape(_land);
 
@@ -399,8 +398,6 @@ void ComplexCanvas::mouseMoveEvent(QMouseEvent *event)
     MainWindow* win = (MainWindow*)parent()->parent();
 
     win->trace(move);
-
-    //qDebug() << move.real() << " " << move.imag();
 }
 
 ComplexCanvas::~ComplexCanvas()

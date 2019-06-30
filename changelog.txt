@@ -1,3 +1,10 @@
+Version 1.0.9
+    - Added interface to communicate between widgets
+    - History implemented
+    - History dialog implemented
+    - Messages displayed with std::cout and debug info displayed with qDebug()
+    - qDebug messages only used in debug builds
+
 Version 1.0.8
     - Landscapes now display with correct orientation
     - Trace feature added, along with custom status bar

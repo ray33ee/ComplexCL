@@ -10,7 +10,9 @@
 #include <QStack>
 #include <exception>
 
+#ifdef QT_DEBUG
 #include <QDebug>
+#endif
 
 enum TokenType
 {
@@ -336,7 +338,7 @@ public:
     std::complex<double> getMax() const { return _min + _diff; }
     std::complex<double> getDiff() const { return _diff; }
 
-    QString toString() const { return QString() + getFormula() + ", from {" + QString::number(getMin().real()) + ", " + QString::number(getMin().imag()) + "} to {"  + QString::number(getMin().real()) + ", " + QString::number(getMin().imag()) + "}"; }
+    QString toString() const { return QString() + "f(z) = " + getFormula() + ", from " + std::toString(getMin()) + " to "  + std::toString(getMax()); }
 
 
 
