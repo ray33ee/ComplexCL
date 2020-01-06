@@ -21,10 +21,20 @@ QStringList Token<T>::allfunctions = { "+", "-", "*", "/", "^",
 
 namespace std
 {
-    QString toString(std::complex<double> z)
+    QString toString(std::complex<double> z, int precision)
     {
-        double im = abs(z.imag());
-        return QString() + QString::number(z.real()) + (z.imag() < 0 ? " - " : " + ") + QString::number(im) + "*i";
+        /*double im = abs(z.imag());
+        return QString() + QString::number(z.real(), 'g', precision) + (z.imag() < 0 ? " - " : " + ") + QString::number(im, 'g', precision) + "*i";
+    */
+
+        if (z.imag() == 0.0) //If the number is real
+            return QString::number(z.real(), 'g', precision);
+
+        if (z.real() == 0.0) //If the number is exclusively imaginary
+            return abs(z.imag()) == 1.0 ? (z.imag() < 0 ? "-i" : "i") : (QString::number(z.imag(), 'g', precision) + "*i");
+
+        return QString::number(z.real(), 'g', precision) + (z.imag() < 0 ? " - " : " + ") + (abs(z.imag()) == 1 ? "i" : (QString::number(abs(z.imag()), 'g', precision) + "*i"));
+
     }
 };
 

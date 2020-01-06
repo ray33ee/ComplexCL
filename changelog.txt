@@ -1,3 +1,10 @@
+Version 1.0.10
+    - Selectable precision when converting complex to string
+    - Calculator dialog implemented
+    - More readable toString(complex) function
+    - Bug that causes kernels occasionaly taking much longer than normal to execute is fixed. Changed from 2D to 1D kernel model
+    - Catch statement in new dialof accept method now correctly displays what() result from exceptions
+
 Version 1.0.9
     - Added interface to communicate between widgets
     - History implemented

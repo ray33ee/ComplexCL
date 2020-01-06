@@ -35,6 +35,8 @@ public:
 
     const Landscape& getLandscape() { return _land; }
 
+    void setup(bool);
+
     int getArea() const;
     int width() const;
     int height() const;

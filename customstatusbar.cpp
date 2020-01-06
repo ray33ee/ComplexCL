@@ -6,8 +6,19 @@ CustomStatusbar::CustomStatusbar(QWidget* parent): QStatusBar (parent)
     traceImag = new QLabel("imaginary", this);
     //traceColour = new QLabel("   ");
 
+    traceReal->setScaledContents(false);
+    traceImag->setScaledContents(false);
+
+    traceReal->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    traceImag->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    traceReal->resize(100, 40);
+    traceImag->resize(100, 40);
+
     addPermanentWidget(traceReal);
     addPermanentWidget(traceImag);
+
+
 }
 
 void CustomStatusbar::trace(const std::complex<double> &z)

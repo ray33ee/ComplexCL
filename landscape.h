@@ -24,7 +24,7 @@ enum TokenType
 
 namespace std
 {
-    QString toString(complex<double> z);
+    QString toString(complex<double> z, int);
 };
 
 /**
@@ -120,6 +120,8 @@ public:
     public:
 
         EvaluatorParseException(QString token): std::exception(), _token(token) {}
+
+        virtual const char* what() const throw() { return "generic exception"; }
 
         QString getToken() const { return _token; }
 
@@ -338,7 +340,7 @@ public:
     std::complex<double> getMax() const { return _min + _diff; }
     std::complex<double> getDiff() const { return _diff; }
 
-    QString toString() const { return QString() + "f(z) = " + getFormula() + ", from " + std::toString(getMin()) + " to "  + std::toString(getMax()); }
+    QString toString() const { return QString() + "f(z) = " + getFormula() + ", from " + std::toString(getMin(), 5) + " to "  + std::toString(getMax(), 5); }
 
 
 

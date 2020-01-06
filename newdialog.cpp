@@ -29,7 +29,7 @@ void NewDialog::accept()
         _land.setString(ui->txtFormula->toPlainText());
 
     }
-    catch (Evaluator::EvaluatorParseException e)
+    catch (Evaluator::EvaluatorParseException &e)
     {
         QMessageBox::warning(this, "ComplexCL", "Formula parse error - " + QString(e.what()), QMessageBox::Ok);
         return;
@@ -43,8 +43,8 @@ void NewDialog::accept()
 int NewDialog::exec()
 {
     ui->txtFormula->setText(_land.getFormula());
-    ui->txtMin->setText(toString(_land.getMin()));
-    ui->txtMax->setText(toString(_land.getMax()));
+    ui->txtMin->setText(toString(_land.getMin(), 10));
+    ui->txtMax->setText(toString(_land.getMax(), 10));
 
     return QDialog::exec();
 }

@@ -25,11 +25,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11
 
-LIBS += -L"E:\Software Projects\Qt\ComplexCL\lib"
+LIBS += -L"E:/Software Projects/Qt/ComplexCL/lib"
 
  LIBS+= -lOpenCL
 
 SOURCES += \
+    calculatordialog.cpp \
     customstatusbar.cpp \
     customtoolbar.cpp \
     historydialog.cpp \
@@ -40,6 +41,7 @@ SOURCES += \
     newdialog.cpp
 
 HEADERS += \
+    calculatordialog.h \
     customstatusbar.h \
     customtoolbar.h \
     history.h \
@@ -51,6 +53,7 @@ HEADERS += \
     newdialog.h
 
 FORMS += \
+        calculatordialog.ui \
         historydialog.ui \
         mainwindow.ui \
         newdialog.ui

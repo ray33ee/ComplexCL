@@ -644,18 +644,20 @@ struct Complex evaluate(__global struct Token* tokens, __global struct Complex* 
 __kernel void get_landscape(__global struct Token* tokens, __global struct Complex* stack, int token_count, struct Complex min, struct Complex diff, int width, int height, __global struct ARGB* colours, int area, int stackmax) 
 {
     //Get index for this thread
-    int i = get_global_id(0) + get_global_id(1) * width;
+    int i = get_global_id(0); // + get_global_id(1) * width;
+    int x = i % width;
+    int y = i / width;
 
     //If index is out of bounds, stop this thread
     if (i >= area)
         return;
-    
+
 
     //Get value of z for this thread
     struct Complex z;
-    z.re = min.re + diff.re / width * get_global_id(0);
-    z.im = min.im + diff.im  - diff.im / height * get_global_id(1); //equivalent to z.im = min.im + diff.im / height * (height - get_global_id(1)); height - get_global_id(1) flips the canvas so min,min is bottom left
-    //z.im = min.im + diff.im / height * get_global_id(1);
+    z.re = min.re + diff.re / width * x;
+    z.im = min.im + diff.im  - diff.im / height * y; //equivalent to z.im = min.im + diff.im / height * (height - get_global_id(1)); height - get_global_id(1) flips the canvas so min,min is bottom left
+    //z.im = min.im + diff.im / height * y;
 
 
 

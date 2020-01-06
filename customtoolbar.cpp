@@ -125,7 +125,7 @@ void CustomToolbar::buttonPressed(QAction* button)
     }
     else if (button == calculatorButton)
     {
-
+        win->calculator();
     }
     else if (button == undoButton)
     {

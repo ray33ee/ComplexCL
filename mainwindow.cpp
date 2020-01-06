@@ -11,6 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     _historydialog = new HistoryDialog(this);
 
+    _calculatordialog = new CalculatorDialog(this);
+
     ui->statusBar->setLandscape(ui->complexcanvas->getReference());
 
     add(Landscape());
@@ -112,4 +114,14 @@ void MainWindow::history()
     {
         ui->complexcanvas->drawLandscape(_history.revert(_historydialog->getIndex()));
     }
+}
+
+void MainWindow::calculator()
+{
+    _calculatordialog->exec();
+}
+
+void MainWindow::setup(bool fp64)
+{
+    ui->complexcanvas->setup(fp64);
 }

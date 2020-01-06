@@ -8,6 +8,7 @@
 #include "landscape.h"
 #include "history.h"
 #include "historydialog.h"
+#include "calculatordialog.h"
 
 
 namespace Ui {
@@ -49,6 +50,10 @@ public:
 
     void history();
 
+    void calculator();
+
+    void setup(bool);
+
 private:
     Ui::MainWindow *ui;
 
@@ -56,6 +61,7 @@ private:
 
     NewDialog* _newdialog;
     HistoryDialog* _historydialog;
+    CalculatorDialog* _calculatordialog;
 };
 
 #endif // MAINWINDOW_H

@@ -6,6 +6,8 @@ HistoryDialog::HistoryDialog(QWidget *parent) :
     ui(new Ui::HistoryDialog)
 {
     ui->setupUi(this);
+
+    setModal(true);
 }
 
 void HistoryDialog::setHistory(const History<Landscape> &his)

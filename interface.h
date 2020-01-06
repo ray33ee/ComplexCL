@@ -36,6 +36,10 @@ public:
 
     virtual void history() = 0;
 
+    virtual void calculator() = 0;
+
+    virtual void setup(bool) = 0;
+
     //virtual void revert();
 
     //~Interface() = 0;

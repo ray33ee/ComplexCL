@@ -3,6 +3,18 @@
 
 ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _land(Landscape()), _maxArea(0)
 {
+    setup(true);
+
+    setMouseTracking(true);
+
+    setScene(&_scene);
+
+    drawLandscape();
+
+}
+
+void ComplexCanvas::setup(bool fp64)
+{
     using namespace std;
 
     cl_uint platCount;
@@ -28,7 +40,7 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _land(Lan
 
     }
 
-    _doublePrecision = getBestDevice(platCount, &device, &platform, true);
+    _doublePrecision = getBestDevice(platCount, &device, &platform, fp64);
 
     cout << "Double precision? " << (_doublePrecision ? "true" : "false") << endl;
 
@@ -64,12 +76,7 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _land(Lan
 
     clReleaseProgram(program);
 
-    setMouseTracking(true);
-
-    setScene(&_scene);
-
     drawLandscape();
-
 }
 
 void ComplexCanvas::errHandler(cl_int err, const char* string)
@@ -206,8 +213,6 @@ void ComplexCanvas::drawCanvas()
 
     int stackMax = _land.getStackMax();
 
-    size_t workSize[] = { w, h };
-
     cl_mem stack;
 
     if (_doublePrecision)
@@ -222,24 +227,33 @@ void ComplexCanvas::drawCanvas()
     _error |= clSetKernelArg(_kernel, 1, sizeof(cl_mem), &stack);
     //cout << "Arguments set. Code " << _error << "." << endl;
 
+
+
+    _error = clEnqueueNDRangeKernel(_queue, _kernel, 1, nullptr, &area, nullptr, 1, &_writeEvent, &kernelEvent);
+    //cout << "Queue kernel. Code " << _error << "." << endl;
+
+    if (_error == CL_INVALID_KERNEL_ARGS)
+        cout << "wtf" << endl;
+
     QTime tmr;
     tmr.start();
 
-    _error = clEnqueueNDRangeKernel(_queue, _kernel, 2, nullptr, workSize, nullptr, 1, &_writeEvent, &kernelEvent);
-    //cout << "Queue kernel. Code " << _error << "." << endl;
-
-    //_error = clWaitForEvents(1, &kernelEvent);
-    //cout << "Waiting for kernel. Code " << _error << "." << endl;
-
-    _error = clEnqueueReadBuffer(_queue, _colourBuff, CL_TRUE, 0, area * sizeof(int), _image.bits(), 1, &kernelEvent, nullptr);
-    //cout << "Read result. Code " << _error << "." << endl;
-
-    _scene.clear();
-    _scene.addPixmap(QPixmap::fromImage(_image));
+    _error = clWaitForEvents(1, &kernelEvent);
+    cout << "Waiting for kernel. Code " << _error << "." << endl;
 
 #ifdef QT_DEBUG
     qDebug() << "Elapsed: " << tmr.elapsed();
 #endif
+
+    _error = clEnqueueReadBuffer(_queue, _colourBuff, CL_TRUE, 0, area * sizeof(int), _image.bits(), 1, &kernelEvent, nullptr);
+    //cout << "Read result. Code " << _error << "." << endl;
+
+
+
+    _scene.clear();
+    _scene.addPixmap(QPixmap::fromImage(_image));
+
+
 
     clReleaseMemObject(stack);
 }
