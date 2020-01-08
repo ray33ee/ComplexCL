@@ -25,6 +25,7 @@ enum TokenType
 namespace std
 {
     QString toString(complex<double> z, int);
+    QString toPolarString(complex<double> z);
 };
 
 /**
@@ -108,6 +109,8 @@ private:
     /** Pattern to match tokens in equation */
     static QString equationRegex;
 
+
+    bool isUnaryNegate(QVector<Token<double> > tokens, QStack<QString> opstack, QString prev);
 
 public:
 
@@ -229,7 +232,7 @@ public:
      * @param z the input complex value
      * @return the output value, f(z).
      */
-    std::complex<double> operator()(const std::complex<double> &z);
+    std::complex<double> operator()(const std::complex<double> &z) const;
 
     /**
      * @brief verify() performs a quick run of the equation, and returns true if a single element remains on the virtual stack, else returns false.
@@ -333,7 +336,7 @@ public:
     }
 
 
-    std::complex<double> operator()(const std::complex<double> &z) { return Evaluator::operator()(z); }
+    std::complex<double> operator()(const std::complex<double> &z) const { return Evaluator::operator()(z); }
 
 
     std::complex<double> getMin() const { return _min; }

@@ -37,6 +37,8 @@ void MainWindow::dialog()
 
     ui->complexcanvas->drawLandscape(_newdialog->getLandscape());
 
+    ui->statusBar->setLandscape(ui->complexcanvas->getReference());
+
     add(_newdialog->getLandscape());
 }
 
@@ -47,7 +49,8 @@ void MainWindow::setMode(Mode mode)
 
 void MainWindow::trace(const std::complex<double> &z)
 {
-    ui->statusBar->trace(z);
+    std::complex<double> w = (ui->complexcanvas->getLandscape())(z);
+    ui->statusBar->trace(z, w);
 }
 
 void MainWindow::zoom(double factor)
@@ -62,6 +65,8 @@ void MainWindow::zoom(double factor)
 
     ui->complexcanvas->drawLandscape(land);
 
+    ui->statusBar->setLandscape(ui->complexcanvas->getReference());
+
     add(land);
 }
 
@@ -72,6 +77,8 @@ void MainWindow::centre()
     land.setMinDiff(-land.getDiff()/2.0, land.getDiff());
 
     ui->complexcanvas->drawLandscape(land);
+
+    ui->statusBar->setLandscape(ui->complexcanvas->getReference());
 
     add(land);
 }
@@ -92,6 +99,7 @@ void MainWindow::undo()
     {
         auto un = _history.undo();
         ui->complexcanvas->drawLandscape(un);
+        ui->statusBar->setLandscape(ui->complexcanvas->getReference());
     }
 }
 
@@ -101,6 +109,7 @@ void MainWindow::redo()
     {
         auto un = _history.redo();
         ui->complexcanvas->drawLandscape(un);
+        ui->statusBar->setLandscape(ui->complexcanvas->getReference());
     }
 }
 
@@ -113,6 +122,7 @@ void MainWindow::history()
     if (_historydialog->exec() == QDialog::Accepted)
     {
         ui->complexcanvas->drawLandscape(_history.revert(_historydialog->getIndex()));
+        ui->statusBar->setLandscape(ui->complexcanvas->getReference());
     }
 }
 

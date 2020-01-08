@@ -1,9 +1,19 @@
+Version 1.0.11
+    - Organised to do list
+    - Added extra information in status bar
+    - '-z' not being parsed as unary negate due to dodgy lambda. Local lambda replaced with private isUnaryNegate function
+    - New dialog returning bad landscapes fixed
+    - Newline character removed when showing landscape formula on single line
+    - We now send result from OpenCL API calls to centralised function which can forward the result to stdout (via qDebug()), or a file (via QFile)
+    - Todo entry for taking care of return values from OpenCL API removed. Return values were already being checked and acted apon.
+    - Cleanup and reword todo
+
 Version 1.0.10
     - Selectable precision when converting complex to string
     - Calculator dialog implemented
     - More readable toString(complex) function
-    - Bug that causes kernels occasionaly taking much longer than normal to execute is fixed. Changed from 2D to 1D kernel model
-    - Catch statement in new dialof accept method now correctly displays what() result from exceptions
+    - Bug that causes kernels to take longer to execute when maximised is fixed. Changed from 2D to 1D kernel model
+    - Catch statement in new dialog accept method now correctly displays what() result from exceptions
 
 Version 1.0.9
     - Added interface to communicate between widgets

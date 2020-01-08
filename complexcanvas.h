@@ -13,6 +13,8 @@
 #include <algorithm>
 #include "interface.h"
 #include <QTime>
+#include <QDateTime>
+#include <QTextStream>
 
 #ifdef QT_DEBUG
 #include <QDebug>
@@ -91,6 +93,8 @@ private:
     static bool getBestDevice(int platCount, cl_device_id *device, cl_platform_id *platform, bool fp64);
 
     void errHandler(cl_int err, const char* string);
+
+    static void logAppend(QString line);
 
     std::complex<double> interpolate(QMouseEvent* mouse);
 

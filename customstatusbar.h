@@ -8,17 +8,21 @@
 class CustomStatusbar : public QStatusBar
 {
 private:
-    Landscape* landscape; //Pointer to current landscape in use
 
-    QLabel* traceReal;
-    QLabel* traceImag;
+    QLabel* traceInput;
+    QLabel* traceOutput;
+
+    QLabel* polarOutput;
+
+    QLabel* function;
+
 
 public:
     CustomStatusbar(QWidget* parent = nullptr);
 
-    void setLandscape(Landscape* land) { landscape = land; }
+    void setLandscape(Landscape* land);
 
-    void trace(const std::complex<double> &z);
+    void trace(const std::complex<double> &z, const std::complex<double> &w);
 };
 
 #endif // CUSTOMSTATUSBAR_H

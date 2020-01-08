@@ -1,15 +1,25 @@
 To Do list:
 
- - Get error codes from OpenCL api calls and act accordingly
- - Create readme.md with build instructions
- - Figure out why some executions take longer than others (check elapsed times)
- - Figure out why '-(0)' throws error
- - Make sure dialog widgets scale with dialog
- - Add/finish newton raphson root finding
- - Add prioritise speed functionality
- - Find out why this canvas drawing takes longer when maximised
-    - If you compare the time elapsed when maximised vs not maximised (but still approximately the same size) there is a clear issue
- - Use multithreading if OpenCL is not availabl
- - For when OpenCL is working, launch OpenCL kernel in worker thread so as not to block UI
- - If there are critical errors with OpenCL, do we exit or change to host multithreading?
- - Add extra information to status bar
+To do entries are prepended with a priority index from 0-9, 0 being so insignificant that it probably shouldn't even be on this list,
+and 9 being so important that it probably should have been fixed already.
+
+Kernel To do
+ - [3] Figure out why some executions take longer than others (check elapsed times)
+
+OpenCL API to do
+
+Docs to do
+ - [2] Create readme.md with build instructions
+
+GUI Backend to do
+ - [5] Add/finish newton raphson root finding
+ - [?] Add prioritise speed functionality
+ - [8] Use C++/QT multithreading if OpenCL is not available
+ - [6] For when OpenCL is working, launch OpenCL kernel in worker thread so as not to block UI
+ - [?] If there are critical errors with OpenCL, we should change to C++/QT multithreading
+ - [2] Use CAS to simplify the function to make it easier to compute
+
+GUI Front end to do
+ - [4] Tooltiptext for EVERYTHING
+ - [6] Make sure that dialogs shrink and expand widgets properly]
+ - [9] Find out why pan doesnt work right away in release

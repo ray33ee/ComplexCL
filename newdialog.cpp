@@ -17,6 +17,8 @@ NewDialog::~NewDialog()
 
 void NewDialog::accept()
 {
+    Landscape newland = _land;
+
     if (ui->txtMin->text() == "" || ui->txtMax->text() == "")
     {
         QMessageBox::warning(this, "ComplexCL", "Please enter a formula into all three boxes", QMessageBox::Ok);
@@ -25,9 +27,8 @@ void NewDialog::accept()
 
     try
     {
-        _land.setDomain(ui->txtMin->text(), ui->txtMax->text());
-        _land.setString(ui->txtFormula->toPlainText());
-
+        newland.setDomain(ui->txtMin->text(), ui->txtMax->text());
+        newland.setString(ui->txtFormula->toPlainText());
     }
     catch (Evaluator::EvaluatorParseException &e)
     {
@@ -35,6 +36,7 @@ void NewDialog::accept()
         return;
     }
 
+    _land = newland;
 
     QDialog::accept();
 

@@ -1,6 +1,7 @@
 #include "complexcanvas.h"
 #include "mainwindow.h"
 
+
 ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _land(Landscape()), _maxArea(0)
 {
     setup(true);
@@ -32,7 +33,8 @@ void ComplexCanvas::setup(bool fp64)
 
     //Get number of platforms
     _error = clGetPlatformIDs(0, nullptr, &platCount);
-    cout << "Get platform count. Code " << _error << "." << endl;
+    logAppend(QString("Get platform count. Code " + QString::number(_error) + "."));
+    //cout << "Get platform count. Code " << _error << "." << endl;
 
     //If there are no platforms, switch to std::thread usage
     if (platCount == 0)
@@ -42,15 +44,15 @@ void ComplexCanvas::setup(bool fp64)
 
     _doublePrecision = getBestDevice(platCount, &device, &platform, fp64);
 
-    cout << "Double precision? " << (_doublePrecision ? "true" : "false") << endl;
+    logAppend(QString("Double precision? ") + (_doublePrecision ? "true" : "false"));
 
     _context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &_error);
     errHandler(_error, "clCreateContext");
-    cout << "Get context." << endl;
+    logAppend(QString("Get context."));
 
     _queue = clCreateCommandQueue(_context, device, 0, &_error);
     errHandler(_error, "clCreateCommandQueue");
-    cout << "Get command queue." << endl;
+    logAppend(QString("Get command queue."));
 
 
     //If you try to combine the two lines into something like const char* kernelS = kernelsource.toStdString().data()
@@ -60,38 +62,58 @@ void ComplexCanvas::setup(bool fp64)
 
     //cout << kernelS << endl;
 
+
     cl_program program = clCreateProgramWithSource(_context, 1, &kernelS, nullptr, &_error);
     errHandler(_error, "clCreateProgramWithSource");
-    cout << "Get program object." << endl;
+    logAppend(QString("Get program object."));
 
 
     _error = clBuildProgram(program, 1, &device, "", nullptr, nullptr);
     errHandler(_error, "clBuildProgram");
-    cout << "Build program." << endl;
+    logAppend(QString("Build program."));
 
 
     _kernel = clCreateKernel(program, "get_landscape", &_error);
     errHandler(_error, "clCreateKernel");
-    cout << "Create kernel object." << endl;
+    logAppend(QString("Create kernel object."));
 
     clReleaseProgram(program);
 
     drawLandscape();
 }
 
+void ComplexCanvas::logAppend(QString line)
+{
+    QFile file("log.txt");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
+        return;
+
+    QTextStream out(&file);
+
+    //Uncomment this next line for writing log entries to qDebug output stream
+    qDebug() << QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss ") << line;
+    //Uncomment this next line for writing log entries to log.txt
+    //out << QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm ") << line << "\n";
+
+    file.close();
+
+}
+
 void ComplexCanvas::errHandler(cl_int err, const char* string)
 {
+    using namespace std;
+
     if (!err)
         return;
 
     if (err == CL_OUT_OF_HOST_MEMORY)
     {
-        std::cout << "Could not allocate resources required on the host, in " << string << ". Aborting." << std::endl;
+        cout << "Could not allocate resources required on the host, in " << string << ". Aborting." << endl;
         QMessageBox::critical(this, "Out of host memory", "Could not allocate resources required on the host.");
     }
     else
     {
-        std::cout << "Error after api call to " << string << ". Error code " << err << "." << std::endl;
+        cout << "Error after api call to " << string << ". Error code " << err << "." << endl;
         QMessageBox::critical(this, "Critical Error", QString() + "Error after api call to " + string + ". Error code " + QString::number(err) + ".");
     }
 
@@ -113,19 +135,19 @@ bool ComplexCanvas::getBestDevice(int platCount, cl_device_id *device, cl_platfo
     cl_int err;
 
     err = clGetPlatformIDs(platCount, platforms, nullptr);
-    cout << "Get platform list. Code " << err << endl;
+    logAppend(QString("Get platform list. Code ") + QString::number(err));
 
     for (int pl = 0; pl < platCount; ++pl)
     {
         cl_uint devCount;
 
         err = clGetDeviceIDs(platforms[pl], CL_DEVICE_TYPE_DEFAULT, 0, nullptr, &devCount);
-        cout << "Get number of devices for platform " << pl << ". Code " << err << endl;
+        logAppend(QString("Get number of devices for platform ") + QString::number(pl) + ". Code " + QString::number(err));
 
         cl_device_id* devices = new cl_device_id[devCount];
 
         err = clGetDeviceIDs(platforms[pl], CL_DEVICE_TYPE_DEFAULT, devCount, devices, nullptr);
-        cout << "Get list of devices. Code " << err << endl;
+        logAppend(QString("Get list of devices. Code ") + QString::number(err));
 
         for (int dev = 0; dev < devCount; ++dev)
         {
@@ -143,7 +165,7 @@ bool ComplexCanvas::getBestDevice(int platCount, cl_device_id *device, cl_platfo
 
             err |= clGetDeviceInfo(devices[dev], CL_DEVICE_NAME, 1024, str, nullptr);
 
-            cout << "    Get device " << str << " score (" << score << "). Code " << err << endl;
+            logAppend(QString("    Get device ") + str + " score (" + QString::number(score) + "). Code " + QString::number(err));
 
 
             if (fp64) //if double precision is required,
@@ -220,17 +242,17 @@ void ComplexCanvas::drawCanvas()
     else
         stack = clCreateBuffer(_context, CL_MEM_READ_WRITE, area * stackMax * sizeof(std::complex<float>), nullptr, &_error);
 
-    //cout << "Create stack buffer. Code " << _error << "." << endl;
+    //logAppend(QString("Create stack buffer. Code ") + QString::number(_error) + ".");
 
     _error = 0;
 
     _error |= clSetKernelArg(_kernel, 1, sizeof(cl_mem), &stack);
-    //cout << "Arguments set. Code " << _error << "." << endl;
+    //logAppend(QString("Arguments set. Code ") + QString::number(_error) + ".");
 
 
 
     _error = clEnqueueNDRangeKernel(_queue, _kernel, 1, nullptr, &area, nullptr, 1, &_writeEvent, &kernelEvent);
-    //cout << "Queue kernel. Code " << _error << "." << endl;
+    //logAppend(QString("Queue kernel. Code ") + QString::number(_error) + ".");
 
     if (_error == CL_INVALID_KERNEL_ARGS)
         cout << "wtf" << endl;
@@ -239,14 +261,14 @@ void ComplexCanvas::drawCanvas()
     tmr.start();
 
     _error = clWaitForEvents(1, &kernelEvent);
-    cout << "Waiting for kernel. Code " << _error << "." << endl;
+    logAppend(QString("Waiting for kernel. Code ") + QString::number(_error) + ".");
 
 #ifdef QT_DEBUG
-    qDebug() << "Elapsed: " << tmr.elapsed();
+    logAppend(QString("Elapsed: ") + QString::number(tmr.elapsed()));
 #endif
 
     _error = clEnqueueReadBuffer(_queue, _colourBuff, CL_TRUE, 0, area * sizeof(int), _image.bits(), 1, &kernelEvent, nullptr);
-    //cout << "Read result. Code " << _error << "." << endl;
+    logAppend(QString("Read result. Code ") + QString::number(_error) + ".");
 
 
 
@@ -267,14 +289,14 @@ void ComplexCanvas::drawLandscape()
     int stackMax = _land.getStackMax();
 
     _tokensBuff = clCreateBuffer(_context, CL_MEM_READ_ONLY, tokenCount * sizeof(Token<double>), nullptr, &_error);
-    cout << "Create tokens buffer. Code " << _error << "." << endl;
+    logAppend(QString("Create tokens buffer. Code ") + QString::number(_error) + ".");
 
     if (_doublePrecision)
         _error = clEnqueueWriteBuffer(_queue, _tokensBuff, CL_TRUE, 0, tokenCount * sizeof(Token<double>), _land.getTokens(), 0, nullptr, &_writeEvent);
     else
         _error = clEnqueueWriteBuffer(_queue, _tokensBuff, CL_TRUE, 0, tokenCount * sizeof(Token<float>), _land.getFloatTokens(), 0, nullptr, &_writeEvent);
 
-    cout << "Create populate tokens buffer. Code " << _error << "." << endl;
+    logAppend(QString("Create populate tokens buffer. Code ") + QString::number(_error));
 
 
     _error = 0;
@@ -299,6 +321,7 @@ void ComplexCanvas::drawLandscape()
     }
     _error |= clSetKernelArg(_kernel, 9, sizeof(int), &stackMax);
 
+    logAppend(QString("Set kernel arguments (error is or'd with multiple calls) ") + QString::number(_error));
 
     errHandler(_error, "clSetKernelArg");
 
@@ -333,6 +356,7 @@ void ComplexCanvas::resizeEvent(QResizeEvent *)
     if (area > _maxArea)
     {
         _colourBuff = clCreateBuffer(_context, CL_MEM_WRITE_ONLY, area * sizeof(int), nullptr, &_error);
+        logAppend(QString("Create output image buffer ") + QString::number(_error));
         errHandler(_error, "clCreateBuffer");
         _error = 0;
         //cout << "Create colour image buffer. Code " << _error << "." << endl;
@@ -344,6 +368,8 @@ void ComplexCanvas::resizeEvent(QResizeEvent *)
     _error |= clSetKernelArg(_kernel, 5, sizeof(int), &w);
     _error |= clSetKernelArg(_kernel, 6, sizeof(int), &h);
     _error |= clSetKernelArg(_kernel, 8, sizeof(int), &area);
+
+    logAppend(QString("Set kernel arguments (error is or'd with multiple calls) ") + QString::number(_error));
 
     errHandler(_error, "clSetKernelArg");
 

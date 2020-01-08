@@ -36,6 +36,13 @@ namespace std
         return QString::number(z.real(), 'g', precision) + (z.imag() < 0 ? " - " : " + ") + (abs(z.imag()) == 1 ? "i" : (QString::number(abs(z.imag()), 'g', precision) + "*i"));
 
     }
+
+    QString toPolarString(std::complex<double> z)
+    {
+        if (real(z) == 0.0 && imag(z) == 0.0)
+            return QString("0");
+        return QString::number(abs(z)) + "\u2220" + QString::number(arg(z));
+    }
 };
 
 Evaluator::Evaluator()
@@ -46,6 +53,12 @@ Evaluator::Evaluator()
 Evaluator::Evaluator(QString formula)
 {
     setString(formula);
+}
+
+bool Evaluator::isUnaryNegate(QVector<Token<double> > tokens, QStack<QString> opstack, QString prev)
+{
+
+    return ((tokens.isEmpty() && opstack.isEmpty()) || prev == "(" || prev == "neg" || isOp(prev));
 }
 
 void Evaluator::setString(QString formula)
@@ -62,7 +75,7 @@ void Evaluator::setString(QString formula)
 
     static QRegularExpression rx(equationRegex);
 
-    static auto isUnaryNegate = [=](QString token) { return token == "-" && ((_tokens.isEmpty() && opStack.isEmpty()) || prevToken == "(" || prevToken == "neg" || isOp(prevToken)); };
+    //static auto isUnaryNegate = [this, opStack, prevToken](QString token) { return token == "-" && ; };
 
     auto global = rx.globalMatch(formula);
 
@@ -93,7 +106,7 @@ void Evaluator::setString(QString formula)
         }
         else if (isOp(token))
         {
-            if (isUnaryNegate(token))
+            if (token == "-" && isUnaryNegate(_tokens, opStack, prevToken))
             {
                 opStack.append("neg");
             }
@@ -174,6 +187,12 @@ void Evaluator::setString(QString formula)
             throw MissingRightBracketException();
         }
     }
+
+
+   /* qDebug() << "Formula: " << formula;
+
+    for (int cnt = 0; cnt < getCount(); cnt++)
+        qDebug() << "    " << getTokens()[cnt].toString();*/
 
     //Verify token list here
     if (!verify())
@@ -266,12 +285,12 @@ int Evaluator::getStackMax() const
     return maxStack;
 }
 
-std::complex<double> Evaluator::operator()(const std::complex<double> &z)
+std::complex<double> Evaluator::operator()(const std::complex<double> &z) const
 {
 
     QStack<std::complex<double> > stack;
 
-    for (Token<double> &tok : _tokens)
+    for (const Token<double> &tok : _tokens)
     {
         auto end = stack.end()-1;
 

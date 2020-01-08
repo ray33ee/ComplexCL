@@ -2,27 +2,34 @@
 
 CustomStatusbar::CustomStatusbar(QWidget* parent): QStatusBar (parent)
 {
-    traceReal = new QLabel("real", this);
-    traceImag = new QLabel("imaginary", this);
+
+    function = new QLabel("f(z) = z", this);
+
+    traceInput = new QLabel("input", this);
+    traceOutput = new QLabel("output", this);
     //traceColour = new QLabel("   ");
 
-    traceReal->setScaledContents(false);
-    traceImag->setScaledContents(false);
+    polarOutput = new QLabel("polar", this);
 
-    traceReal->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    traceImag->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    for (auto &label : findChildren<QLabel*>())
+    {
+        label->setScaledContents(false);
+        label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        label->resize(200, 40);
+        addPermanentWidget(label);
 
-    traceReal->resize(100, 40);
-    traceImag->resize(100, 40);
-
-    addPermanentWidget(traceReal);
-    addPermanentWidget(traceImag);
-
+    }
 
 }
 
-void CustomStatusbar::trace(const std::complex<double> &z)
+void CustomStatusbar::setLandscape(Landscape* land)
 {
-    traceReal->setText(QString::number(z.real()));
-    traceImag->setText(QString::number(z.imag()));
+    function->setText(land->toString().remove(QRegExp("[\n]")));
+}
+
+void CustomStatusbar::trace(const std::complex<double> &z, const std::complex<double> &w)
+{
+    traceInput->setText(std::toString(z, 5));
+    traceOutput->setText(std::toString(w, 5));
+    polarOutput->setText(std::toPolarString(w));
 }
