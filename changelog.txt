@@ -1,3 +1,12 @@
+Version 1.0.12
+    - Tooltip text added to widgets and title added to dialog boxes
+    - Kernel execution is now called in worker thread
+    - Status bar function domain now changes on pan and zoom
+    - Colour conversion and trace colour in status bar added
+    - Pan only works if the mouse down and mouse up position are different
+    - Increased verbosity in getBestDevice function
+    - Fixed invalid args issue. Initial draw only executes once. setSizeArgs and setFunctionArgs functions created for modularity
+
 Version 1.0.11
     - Organised to do list
     - Added extra information in status bar

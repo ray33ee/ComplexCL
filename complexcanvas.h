@@ -15,6 +15,12 @@
 #include <QTime>
 #include <QDateTime>
 #include <QTextStream>
+#include <QTimer>
+#include <thread>
+#include <QFuture>
+#include <QVector>
+
+#include <windows.h>
 
 #ifdef QT_DEBUG
 #include <QDebug>
@@ -39,11 +45,8 @@ public:
 
     void setup(bool);
 
-    int getArea() const;
     int width() const;
     int height() const;
-
-    void drawCanvas();
 
     void drawLandscape();
 
@@ -56,7 +59,6 @@ public:
     virtual void mouseReleaseEvent(QMouseEvent *event);
 
     virtual void mouseMoveEvent(QMouseEvent *event);
-
 
     ~ComplexCanvas();
 
@@ -73,6 +75,7 @@ private:
 
     //OpenCL events
     cl_event            _writeEvent;
+    cl_event            _kernelEvent;
 
     //OpenCL error code
     cl_int              _error;
@@ -88,6 +91,12 @@ private:
 
     bool                _doublePrecision;
 
+    bool                _draw;
+
+    enum ParalellComputingAPI { OPEN_CL, CPU } _api;
+
+    QTimer*             _guiloop;
+
     std::complex<double> _pressVector;
 
     static bool getBestDevice(int platCount, cl_device_id *device, cl_platform_id *platform, bool fp64);
@@ -97,6 +106,21 @@ private:
     static void logAppend(QString line);
 
     std::complex<double> interpolate(QMouseEvent* mouse);
+
+    void workerExecution(int area);
+
+    void setSizeArgs();
+
+    void setFunctionArgs();
+
+    void drawLandscapeCL();
+
+    void drawLandscapCPU();
+
+    void drawCanvas();
+
+public slots:
+    void guiLoop();
 
 };
 

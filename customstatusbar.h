@@ -12,6 +12,8 @@ private:
     QLabel* traceInput;
     QLabel* traceOutput;
 
+    QLabel* traceColour;
+
     QLabel* polarOutput;
 
     QLabel* function;

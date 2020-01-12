@@ -1,4 +1,10 @@
 #include "landscape.h"
+#include <math.h>
+
+#define R_PI M_PI
+#define R_PI_2 M_PI_2
+#define R_2_PI (6.28318530717958647692)     //  2*pi
+#define R_1_2_PI (0.159154943091895335769)  //  1/(2*pi)
 
 QString Evaluator::floatingRegex = "(?:(?:(?<=[(*/^])|^)[+-]*)?(?:\\b[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+\\b)(?:e[-+]*?[0-9]+\\b)?";
 
@@ -21,7 +27,7 @@ QStringList Token<T>::allfunctions = { "+", "-", "*", "/", "^",
 
 namespace std
 {
-    QString toString(std::complex<double> z, int precision)
+    QString toString(const complex<double> &z, int precision)
     {
         /*double im = abs(z.imag());
         return QString() + QString::number(z.real(), 'g', precision) + (z.imag() < 0 ? " - " : " + ") + QString::number(im, 'g', precision) + "*i";
@@ -37,11 +43,157 @@ namespace std
 
     }
 
-    QString toPolarString(std::complex<double> z)
+    QString toPolarString(const complex<double> & z)
     {
         if (real(z) == 0.0 && imag(z) == 0.0)
             return QString("0");
         return QString::number(abs(z)) + "\u2220" + QString::number(arg(z));
+    }
+
+    inline bool isNaN(const complex<double> &z) { return isnan(z.real()) || isnan(z.imag()); }
+
+    inline bool isInf(const complex<double> &z) { return (isinf(z.real()) || isinf(z.imag())) && !isNaN(z); }
+
+    inline bool isZero(const complex<double> &z) { return z.real() == 0.0 && z.imag() == 0.0; }
+
+    /**
+     * Function gets the absolute value of the complex number
+     * @param z the complex number
+     * @return the absolute value of the complex number z, |z|.
+     */
+    double c_abs(const complex<double> & z)
+    {
+        if (isNaN(z))
+            return NAN;
+
+        if (isInf(z))
+            return INFINITY;
+
+        return hypot(z.real(), z.imag());
+    }
+
+    /**
+     * Function gets the argument of the complex number
+     * @param z the complex number
+     * @return the argument, arg(z).
+     */
+    double c_arg(const complex<double> & z) { return atan2(z.imag(), z.real()); }
+
+    /**
+     * HueToRGB is called by HLtoRGB to facilitate conversion
+     */
+    float  HueToRGB(float p, float q, float h)
+    {
+        if (h < 0) h += 1;
+
+        if (h > 1 ) h -= 1;
+
+        if (6 * h < 1) return p + ((q - p) * 6 * h);
+
+        if (2 * h < 1 ) return  q;
+
+        if (3 * h < 2) return p + ( (q - p) * 6 * ((2.0f / 3.0f) - h) );
+
+        return p;
+    }
+
+    int ARGB_constructor(int r, int g, int b)
+    {
+        return b | g << 8 | r << 16 | 0xFF000000;
+    }
+
+    /**
+     * HLtoRGB converts a hue and lightness value to an ARGB object
+     * @param h hue number from 0 to 1
+     * @param l lightness value from 0 to 1
+     * @return a converted ARGB object
+     */
+    int HLtoRGB(float h, float l)
+    {
+        float q = l < 0.5 ? l*2 : 1;
+
+        float p = 2 * l - q;
+
+        float r = max(0.0f, HueToRGB(p, q, h + (1.0f / 3.0f)));
+        float g = max(0.0f, HueToRGB(p, q, h));
+        float b = max(0.0f, HueToRGB(p, q, h - (1.0f / 3.0f)));
+
+        r = min(r, 1.0f);
+        g = min(g, 1.0f);
+        b = min(b, 1.0f);
+
+        return ARGB_constructor( r*255, g*255, b*255);
+    }
+
+    /**
+     * Gets the colour of the complex number as per the domain colouring algorithm
+     * @param z the complex number
+     * @return the colour, as an ARGB type
+     */
+    int c_colour(const complex<double> &z)
+    {
+
+        //If z is zero, or contains a NaN component display as white
+        if (isZero(z) || isNaN(z) )
+            return ARGB_constructor (255, 255, 255);
+
+        //Both components are +/-inf
+        if (isinf(z.real()) && isinf(z.imag()))
+        {
+            if (z.real() > 0 && z.imag() > 0)
+                return ARGB_constructor (255, 0, 191) ;
+            else if (z.real() < 0 && z.imag() > 0)
+                return ARGB_constructor (0, 64, 255) ;
+            else if (z.real() < 0 && z.imag() < 0)
+                return ARGB_constructor (0, 255, 64) ;
+            else
+                return ARGB_constructor (255, 191, 0) ;
+        }
+
+        //Either one, or the other component is +/1 inf
+        if (isInf(z))
+        {
+            if (isinf(z.real()) && z.real() > 0)
+                return ARGB_constructor (255, 0, 0) ;
+            else if (isinf(z.real()) && z.real() < 0)
+                return ARGB_constructor (0, 255, 255) ;
+            else if(isinf(z.imag()) && z.imag() > 0)
+                return ARGB_constructor (128, 0, 255) ;
+            else
+                return ARGB_constructor (128, 255, 0) ;
+        }
+
+        double arg = c_arg(z);
+        double hue = arg;
+        double modarg = log(c_abs(z));
+        double lightness;
+
+        //Convert argument from -pi to pi --> 0 to 2pi
+        if (arg < 0)
+            hue = R_2_PI + arg;
+
+        //Convert from 0 to 2pi --> 0 to 1
+        hue = 1.0 - hue * R_1_2_PI;
+
+        if (modarg < 0)
+        {
+            lightness = 0.75 - c_abs(z) / 2.0;
+        }
+        else
+        {
+            if (!((int)modarg & 1)) //If whole part of modarg is even, 0 --> 1 maps to black --> white
+                    lightness =  fmin( modarg - floor(modarg), (double)(0x1.fffffep-1f) ) / 2.0 + 0.25;
+            else //If whole part of modarg is odd 0 --> 1 maps to white --> black
+                    lightness = 0.75 - (modarg - floor(modarg)) / 2.0;
+        }
+
+        return HLtoRGB(hue, lightness);
+    }
+
+    int toColor(const complex<double> &z)
+    {
+
+        return c_colour(z);
     }
 };
 

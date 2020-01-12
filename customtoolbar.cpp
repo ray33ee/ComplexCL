@@ -41,6 +41,8 @@ CustomToolbar::CustomToolbar(QWidget* parent) : QToolBar (parent)
 
     //Start application with pan already checked
     panButton->setChecked(true);
+    Interface* win = dynamic_cast<Interface*>(parent);
+    win->setMode(PAN);
 
     //Add buttons with tooltiptext and seperators to toolbar
     addAction(newButton);
@@ -94,6 +96,9 @@ CustomToolbar::CustomToolbar(QWidget* parent) : QToolBar (parent)
     zoutButton->setToolTip("Zoom out");
 
     priorityButton->setToolTip("Toggle between speed and acuracy priority");
+
+    //Disable WIP priority button
+    priorityButton->setEnabled(false);
 
     connect(this, actionTriggered, this, buttonPressed);
 

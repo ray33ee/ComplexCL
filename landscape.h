@@ -3,12 +3,12 @@
 
 #include <complex>
 #include <cmath>
-#include <bits/stdc++.h>
 #include <QVector>
 #include <QString>
 #include <QRegularExpression>
 #include <QStack>
 #include <exception>
+#include <math.h>
 
 #ifdef QT_DEBUG
 #include <QDebug>
@@ -24,8 +24,9 @@ enum TokenType
 
 namespace std
 {
-    QString toString(complex<double> z, int);
-    QString toPolarString(complex<double> z);
+    QString toString(const complex<double> &z, int);
+    QString toPolarString(const complex<double> &z);
+    int toColor(const complex<double> &z);
 };
 
 /**

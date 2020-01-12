@@ -10,6 +10,7 @@ CalculatorDialog::CalculatorDialog(QWidget *parent) :
     ui->txtAnswer->setReadOnly(true);
 
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Calculate");
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Ok");
 
     accept();
 

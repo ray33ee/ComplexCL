@@ -7,9 +7,10 @@ CustomStatusbar::CustomStatusbar(QWidget* parent): QStatusBar (parent)
 
     traceInput = new QLabel("input", this);
     traceOutput = new QLabel("output", this);
-    //traceColour = new QLabel("   ");
 
     polarOutput = new QLabel("polar", this);
+
+    traceColour = new QLabel("testing", this);
 
     for (auto &label : findChildren<QLabel*>())
     {
@@ -19,6 +20,14 @@ CustomStatusbar::CustomStatusbar(QWidget* parent): QStatusBar (parent)
         addPermanentWidget(label);
 
     }
+
+    function->setToolTip("Function and domain");
+    traceInput->setToolTip("Input value (z)");
+    traceOutput->setToolTip("Output value (f(z))");
+    polarOutput->setToolTip("Output value polar form");
+    traceColour->setToolTip("Colour");
+
+    traceColour->setAutoFillBackground(true);
 
 }
 
@@ -32,4 +41,9 @@ void CustomStatusbar::trace(const std::complex<double> &z, const std::complex<do
     traceInput->setText(std::toString(z, 5));
     traceOutput->setText(std::toString(w, 5));
     polarOutput->setText(std::toPolarString(w));
+    QPalette pal = traceColour->palette();
+
+    pal.setColor(QPalette::Normal, QPalette::Background, std::toColor(w));
+
+    traceColour->setPalette(pal);
 }

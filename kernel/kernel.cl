@@ -521,6 +521,7 @@ struct ARGB c_colour(struct Complex z)
     {
         lightness = 0.75 - c_abs(z) / 2.0;
     }
+
     else
     {
         if (!((int)modarg & 1)) //If whole part of modarg is even, 0 --> 1 maps to black --> white
@@ -652,13 +653,10 @@ __kernel void get_landscape(__global struct Token* tokens, __global struct Compl
     if (i >= area)
         return;
 
-
     //Get value of z for this thread
     struct Complex z;
     z.re = min.re + diff.re / width * x;
     z.im = min.im + diff.im  - diff.im / height * y; //equivalent to z.im = min.im + diff.im / height * (height - get_global_id(1)); height - get_global_id(1) flips the canvas so min,min is bottom left
-    //z.im = min.im + diff.im / height * y;
-
 
 
     //Return the colour

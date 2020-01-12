@@ -91,6 +91,7 @@ void MainWindow::setEnabled(bool b)
 void MainWindow::add(const Landscape &land)
 {
     _history.add(land);
+    ui->statusBar->setLandscape(ui->complexcanvas->getReference());
 }
 
 void MainWindow::undo()

@@ -4,9 +4,10 @@ To do entries are prepended with a priority index from 0-9, 0 being so insignifi
 and 9 being so important that it probably should have been fixed already.
 
 Kernel To do
- - [3] Figure out why some executions take longer than others (check elapsed times)
+ - [3] Figure out why some executions take longer than others (check elapsed times) This is a one in 250 ish chance of happening, probably shgouldn't even be priority 3 really
 
 OpenCL API to do
+ - [6] Find out why we're getting "Waiting for kernel. Code -52." and "Read result. Code -58." in the first draw
 
 Docs to do
  - [2] Create readme.md with build instructions
@@ -14,12 +15,15 @@ Docs to do
 GUI Backend to do
  - [5] Add/finish newton raphson root finding
  - [?] Add prioritise speed functionality
+    - Make sure whichever we chose (double or single precision) we send the appropriate size (double for double, single for single)
  - [8] Use C++/QT multithreading if OpenCL is not available
- - [6] For when OpenCL is working, launch OpenCL kernel in worker thread so as not to block UI
- - [?] If there are critical errors with OpenCL, we should change to C++/QT multithreading
  - [2] Use CAS to simplify the function to make it easier to compute
+ - [6] When user rapidly resizes, scrollbars appear, this needs to not happen
 
 GUI Front end to do
  - [4] Tooltiptext for EVERYTHING
- - [6] Make sure that dialogs shrink and expand widgets properly]
+ - [6] Make sure that dialogs shrink and expand widgets properly
  - [9] Find out why pan doesnt work right away in release
+ - [9] Investigate why the call to sceneRect() solves the first map in the bottom right corner issue
+ - [0] Add icon
+ - [2] Change icon backgrounds to transparent

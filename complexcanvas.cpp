@@ -8,9 +8,13 @@ ComplexCanvas::ComplexCanvas(QWidget *parent) : QGraphicsView(parent), _land(Lan
 
     setMouseTracking(true);
 
+    _scene.setSceneRect(0, 0, 0, 0);
+
+    setSceneRect(0, 0, 0, 0);
+
     setScene(&_scene);
 
-    drawLandscape();
+    //drawLandscape();
 
 }
 
@@ -18,9 +22,13 @@ void ComplexCanvas::setup(bool fp64)
 {
     using namespace std;
 
+    logAppend(QString("Setup initiated."));
+
     cl_uint platCount;
     cl_platform_id platform;
     cl_device_id device;
+
+    _draw = false;
 
     //Put kernel code into const char* pointer
     QFile kernelCode(":/OpenCL/kernel/kernel.cl");
@@ -38,9 +46,7 @@ void ComplexCanvas::setup(bool fp64)
 
     //If there are no platforms, switch to std::thread usage
     if (platCount == 0)
-    {
-
-    }
+        _api = ComplexCanvas::CPU;
 
     _doublePrecision = getBestDevice(platCount, &device, &platform, fp64);
 
@@ -79,23 +85,37 @@ void ComplexCanvas::setup(bool fp64)
 
     clReleaseProgram(program);
 
-    drawLandscape();
+    _api = ComplexCanvas::OPEN_CL;
+
+    _guiloop = new QTimer(this);
+
+    connect(_guiloop, SIGNAL(timeout()), this, SLOT(guiLoop()));
+
+    _guiloop->start();
+
+    setFunctionArgs();
+
 }
 
 void ComplexCanvas::logAppend(QString line)
 {
+    QString timestamp = QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss.zzz ");
+
+#ifdef QT_DEBUG
+    //Uncomment this next line for writing log entries to qDebug output stream
+    qDebug() << timestamp << line;
+#else
     QFile file("log.txt");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append))
         return;
 
     QTextStream out(&file);
-
-    //Uncomment this next line for writing log entries to qDebug output stream
-    qDebug() << QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm:ss ") << line;
     //Uncomment this next line for writing log entries to log.txt
-    //out << QDateTime::currentDateTime().toString("yyyy/MM/dd HH:mm ") << line << "\n";
+    out << timestamp << line << "\n";
 
     file.close();
+#endif
+
 
 }
 
@@ -125,6 +145,8 @@ bool ComplexCanvas::getBestDevice(int platCount, cl_device_id *device, cl_platfo
 {
     using namespace std;
 
+    char str[1024];
+
     int maxScore = 0;
     cl_platform_id bestPlatform;
     cl_device_id bestDevice;
@@ -135,14 +157,14 @@ bool ComplexCanvas::getBestDevice(int platCount, cl_device_id *device, cl_platfo
     cl_int err;
 
     err = clGetPlatformIDs(platCount, platforms, nullptr);
-    logAppend(QString("Get platform list. Code ") + QString::number(err));
+    logAppend(QString("Get platform list. ") + QString::number(platCount) + " platform(s) found. Code " + QString::number(err));
 
     for (int pl = 0; pl < platCount; ++pl)
     {
         cl_uint devCount;
 
         err = clGetDeviceIDs(platforms[pl], CL_DEVICE_TYPE_DEFAULT, 0, nullptr, &devCount);
-        logAppend(QString("Get number of devices for platform ") + QString::number(pl) + ". Code " + QString::number(err));
+        logAppend(QString("Get number of devices for platform ") + QString::number(pl) + ". " + QString::number(devCount) + " device(s) found. Code " + QString::number(err));
 
         cl_device_id* devices = new cl_device_id[devCount];
 
@@ -151,7 +173,7 @@ bool ComplexCanvas::getBestDevice(int platCount, cl_device_id *device, cl_platfo
 
         for (int dev = 0; dev < devCount; ++dev)
         {
-            char str[1024];
+
             int score = 1;
 
             err = 0;
@@ -205,6 +227,18 @@ bool ComplexCanvas::getBestDevice(int platCount, cl_device_id *device, cl_platfo
     *device = bestDevice;
     *platform = bestPlatform;
 
+    QString deviceDetails;
+
+    clGetPlatformInfo(bestPlatform, CL_PLATFORM_NAME, 1024, str, nullptr);
+    deviceDetails += str;
+
+    deviceDetails += ", ";
+
+    clGetDeviceInfo(bestDevice, CL_DEVICE_NAME, 1024, str, nullptr);
+    deviceDetails += str;
+
+    logAppend(QString("Device selected (") + deviceDetails + ") with score " + QString::number(maxScore));
+
     return fp64;
 }
 
@@ -218,69 +252,42 @@ int ComplexCanvas::height() const
     return QGraphicsView::height() - 2;
 }
 
-int ComplexCanvas::getArea() const
-{
-    return width() * height();
-}
-
-void ComplexCanvas::drawCanvas()
+void ComplexCanvas::setSizeArgs()
 {
     using namespace std;
 
-    size_t w = static_cast<size_t>(width());
-    size_t h = static_cast<size_t>(height());
-    size_t area = w*h;
+    logAppend(QString("Resize initiated."));
 
-    cl_event kernelEvent;
+    int w = width();
+    int h = height();
 
-    int stackMax = _land.getStackMax();
+    int area = w * h;
 
-    cl_mem stack;
-
-    if (_doublePrecision)
-        stack = clCreateBuffer(_context, CL_MEM_READ_WRITE, area * stackMax * sizeof(std::complex<double>), nullptr, &_error);
-    else
-        stack = clCreateBuffer(_context, CL_MEM_READ_WRITE, area * stackMax * sizeof(std::complex<float>), nullptr, &_error);
-
-    //logAppend(QString("Create stack buffer. Code ") + QString::number(_error) + ".");
+    _image = QImage(w, h, QImage::Format_RGB32);
 
     _error = 0;
 
-    _error |= clSetKernelArg(_kernel, 1, sizeof(cl_mem), &stack);
-    //logAppend(QString("Arguments set. Code ") + QString::number(_error) + ".");
+    if (area > _maxArea)
+    {
+        _colourBuff = clCreateBuffer(_context, CL_MEM_WRITE_ONLY, area * sizeof(int), nullptr, &_error);
+        logAppend(QString("Create output image buffer ") + QString::number(_error));
+        errHandler(_error, "clCreateBuffer");
+        _error = 0;
+        _error |= clSetKernelArg(_kernel, 7, sizeof(cl_mem), &_colourBuff);
+        _maxArea = area;
+    }
 
+    _error = 0;
+    _error |= clSetKernelArg(_kernel, 5, sizeof(int), &w);
+    _error |= clSetKernelArg(_kernel, 6, sizeof(int), &h);
+    _error |= clSetKernelArg(_kernel, 8, sizeof(int), &area);
 
+    logAppend(QString("Set kernel arguments (error is or'd with multiple calls) ") + QString::number(_error));
 
-    _error = clEnqueueNDRangeKernel(_queue, _kernel, 1, nullptr, &area, nullptr, 1, &_writeEvent, &kernelEvent);
-    //logAppend(QString("Queue kernel. Code ") + QString::number(_error) + ".");
-
-    if (_error == CL_INVALID_KERNEL_ARGS)
-        cout << "wtf" << endl;
-
-    QTime tmr;
-    tmr.start();
-
-    _error = clWaitForEvents(1, &kernelEvent);
-    logAppend(QString("Waiting for kernel. Code ") + QString::number(_error) + ".");
-
-#ifdef QT_DEBUG
-    logAppend(QString("Elapsed: ") + QString::number(tmr.elapsed()));
-#endif
-
-    _error = clEnqueueReadBuffer(_queue, _colourBuff, CL_TRUE, 0, area * sizeof(int), _image.bits(), 1, &kernelEvent, nullptr);
-    logAppend(QString("Read result. Code ") + QString::number(_error) + ".");
-
-
-
-    _scene.clear();
-    _scene.addPixmap(QPixmap::fromImage(_image));
-
-
-
-    clReleaseMemObject(stack);
+    errHandler(_error, "clSetKernelArg");
 }
 
-void ComplexCanvas::drawLandscape()
+void ComplexCanvas::setFunctionArgs()
 {
     using namespace std;
 
@@ -324,9 +331,89 @@ void ComplexCanvas::drawLandscape()
     logAppend(QString("Set kernel arguments (error is or'd with multiple calls) ") + QString::number(_error));
 
     errHandler(_error, "clSetKernelArg");
+}
+
+void ComplexCanvas::drawCanvas()
+{
+    using namespace std;
+
+    size_t w = static_cast<size_t>(width());
+    size_t h = static_cast<size_t>(height());
+    size_t area = w*h;
+
+
+
+    int stackMax = _land.getStackMax();
+
+    cl_mem stack;
+
+    if (_doublePrecision)
+        stack = clCreateBuffer(_context, CL_MEM_READ_WRITE, area * stackMax * sizeof(std::complex<double>), nullptr, &_error);
+    else
+        stack = clCreateBuffer(_context, CL_MEM_READ_WRITE, area * stackMax * sizeof(std::complex<float>), nullptr, &_error);
+
+    //logAppend(QString("Create stack buffer. Code ") + QString::number(_error) + ".");
+
+    _error = 0;
+
+    _error |= clSetKernelArg(_kernel, 1, sizeof(cl_mem), &stack);
+    //logAppend(QString("Arguments set. Code ") + QString::number(_error) + ".");
+
+    QTime tmr;
+    tmr.start();
+
+    _error = clEnqueueNDRangeKernel(_queue, _kernel, 1, nullptr, &area, nullptr, 1, &_writeEvent, &_kernelEvent);
+    //logAppend(QString("Queue kernel. Code ") + QString::number(_error) + ".");
+
+    //_error = clWaitForEvents(1, &kernelEvent);
+    logAppend(QString("Waiting for kernel. Code ") + QString::number(_error) + ".");
+
+#ifdef QT_DEBUG
+    logAppend(QString("Elapsed: ") + QString::number(tmr.elapsed()));
+#endif
+
+    //Spawn worker thread to execute kernel
+    /*std::thread worker([=] { workerExecution(area); });
+
+    worker.detach();*/
+
+    workerExecution(area);
+
+    //guiLoop();
+
+    clReleaseMemObject(stack);
+}
+
+void ComplexCanvas::drawLandscapCPU()
+{
+    size_t w = static_cast<size_t>(width());
+    size_t h = static_cast<size_t>(height());
+    size_t area = w*h;
+
+
+
+    //Spawn worker thread to execute kernel
+    /*std::thread worker([=] { workerExecution(area); });
+    worker.detach();*/
+
+    //workerExecution(area);
+
+}
+
+void ComplexCanvas::drawLandscapeCL()
+{
+    setFunctionArgs();
 
     drawCanvas();
 
+}
+
+void ComplexCanvas::drawLandscape()
+{
+    if (_api == ComplexCanvas::OPEN_CL)
+        drawLandscapeCL();
+    else if (_api == ComplexCanvas::CPU)
+        drawLandscapCPU();
 }
 
 void ComplexCanvas::drawLandscape(Landscape land)
@@ -340,38 +427,41 @@ void ComplexCanvas::drawLandscape(Landscape land)
     drawLandscape();
 }
 
-void ComplexCanvas::resizeEvent(QResizeEvent *)
+void ComplexCanvas::
+workerExecution(int area)
 {
-    using namespace std;
-
-    int w = width();
-    int h = height();
-
-    int area = w * h;
-
-    _image = QImage(w, h, QImage::Format_RGB32);
-
-    _error = 0;
-
-    if (area > _maxArea)
+    if (_api == ComplexCanvas::OPEN_CL)
     {
-        _colourBuff = clCreateBuffer(_context, CL_MEM_WRITE_ONLY, area * sizeof(int), nullptr, &_error);
-        logAppend(QString("Create output image buffer ") + QString::number(_error));
-        errHandler(_error, "clCreateBuffer");
-        _error = 0;
-        //cout << "Create colour image buffer. Code " << _error << "." << endl;
-        _error |= clSetKernelArg(_kernel, 7, sizeof(cl_mem), &_colourBuff);
-        _maxArea = area;
+        //Block thread until kernel execution and memory copying is finished. Set _draw flag
+        _error = clEnqueueReadBuffer(_queue, _colourBuff, CL_TRUE, 0, area * sizeof(int), _image.bits(), 1, &_kernelEvent, nullptr);
+        logAppend(QString("Read result. Code ") + QString::number(_error) + ".");
+        _draw = true;
+    }
+    else if (_api == ComplexCanvas::CPU)
+    {
+        QVector< QFuture< void > > threadList;
+    }
+}
+
+void ComplexCanvas::guiLoop()
+{
+    //If its time to draw, draw and reset flag
+    if (_draw)
+    {
+        _scene.clear();
+        _scene.addPixmap(QPixmap::fromImage(_image));
+        //The following line looks like it does nothing, but for some reason the call to sceneRect() fixed the issue of
+        //the first landscape drawn not aligning with the top left corner
+        _scene.sceneRect();
+
+        _draw = false;
     }
 
-    _error = 0;
-    _error |= clSetKernelArg(_kernel, 5, sizeof(int), &w);
-    _error |= clSetKernelArg(_kernel, 6, sizeof(int), &h);
-    _error |= clSetKernelArg(_kernel, 8, sizeof(int), &area);
+}
 
-    logAppend(QString("Set kernel arguments (error is or'd with multiple calls) ") + QString::number(_error));
-
-    errHandler(_error, "clSetKernelArg");
+void ComplexCanvas::resizeEvent(QResizeEvent *)
+{
+    setSizeArgs();
 
     drawCanvas();
 }
@@ -402,6 +492,9 @@ void ComplexCanvas::mouseReleaseEvent(QMouseEvent * ev)
     auto thisVector = interpolate(ev);
     auto diffVector = thisVector - _pressVector;
 
+    if (diffVector.real() == 0.0 && diffVector.imag() == 0.0)
+        return;
+
     MainWindow* win = (MainWindow*)parent()->parent();
 
 
@@ -426,6 +519,7 @@ void ComplexCanvas::mouseReleaseEvent(QMouseEvent * ev)
     }
 
     win->setLandscape(_land);
+
 
     drawLandscape();
 
